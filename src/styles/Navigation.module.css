@@ -1,0 +1,16 @@
+.NavigationBtn {
+    padding: 10px 20px;
+    background-color:  rgba(38, 178, 73, 0.837);
+    color: white;
+    cursor: pointer;
+    border-radius: 7px;
+}
+
+.NavContainer {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
