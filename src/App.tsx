@@ -6,6 +6,7 @@ import Register from './pages/RegisterPage';
 import Home from './pages/HomePage'
 import Dashboard from './pages/Dashboard';
 import Toolbar from './components/Toolbar'; // Import your new component
+import ProfilePage from './pages/ProfilePage';
 function App() {
   return (
     <>
@@ -20,7 +21,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/Register" element={<Register />} />
         <Route path= "/Dashboard" element= {<Dashboard />} />
-        
+        <Route path= "/profile" element= {<ProfilePage/>} />
         
       </Routes>
     </>

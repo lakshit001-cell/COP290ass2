@@ -22,6 +22,11 @@ function Register(){
       alert("Password must be at least 8 characters!");
       return;
     }
+
+
+    const newUser= {name:name,email:email,ProfilePic:'../profile_icon.jpg', password:password};
+    localStorage.setItem("user",JSON.stringify(newUser));
+    
     
     // Industrial Standard: Log the action and move to Dashboard
     console.log("Registration Successful for:", );

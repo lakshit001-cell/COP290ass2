@@ -1,0 +1,117 @@
+.text {
+    color: aliceblue;
+}
+
+.background {
+    background-image: url('../backgnd1.jpg'); 
+  
+  
+    background-size: cover;      /* Makes the image fill the whole screen */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from tiling */
+
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.profilecard {
+     background-color: rgba(0, 0, 0, 0.677); /*transperancy*/
+    padding: 40px;
+    border-radius: 10px;
+    width: 100%;
+    height: 750px;
+    max-width:500px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+        align-items: center;
+    justify-content: left;
+    color: #ffffff;
+}
+
+.group {
+    display: flex;             
+    align-items: center;      
+    margin-bottom: 15px;      
+    gap: 30px;                
+    
+
+}
+
+.label {
+    display: block;
+    font-size: xx-large;
+    color: rgb(255, 255, 255);
+
+}
+
+.center {
+    justify-content: center;
+    align-items: center;
+}
+
+.field {
+    
+    width: fit-content;
+    min-width: 100px;
+    background-color: #2a2a2a;
+    color: #eee;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid #959191;
+    font-size: 1.75rem;
+}
+
+.profilepic {
+    width:200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 30px;
+    border: #959191;
+}
+
+.profileavatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;      /* Essential: keeps the aspect ratio perfect */
+    
+
+}
+
+.fileInput {
+    display: none;            /* Keep the actual input hidden */
+}
+
+.imageLabel {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;         /* Keeps everything circular */
+    cursor: pointer;
+    border: 3px solid #333;
+    transition: border-color 0.3s ease;
+}
+.imagewrapper {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 30px;
+}
+
+
+.LogBtn {
+    padding: 10px 20px;
+    background-color: rgb(222, 59, 59);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 120px;
+
+}
