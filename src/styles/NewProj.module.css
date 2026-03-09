@@ -1,0 +1,73 @@
+.text {
+    color:aliceblue
+}
+
+
+.backgnd {
+  background-image: url('../backgnd1.jpg'); 
+  
+  
+    background-size: cover;      /* Makes the image fill the whole screen */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from tiling */
+
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px; /* Prevents the image from tiling */
+}
+
+.card {
+    background: rgba(18, 18, 18, 0.9); /*transperancy*/
+    padding: 40px;
+    border-radius: 10px;
+    width: 700px;
+    height: 55  0px;
+    
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+        align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.inputField {
+     padding: 14px;
+    width: 280px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+}
+
+.inputFieldd {
+     padding: 14px;
+     height: 100px;
+    width: 500px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+}
+
+.inputgroup {
+    display: flex;
+    flex-direction:column;
+    text-align: left; /* Keep labels aligned to the left */
+    gap: 8px;
+
+}
+
+.size {
+    font-size: 1.1rem;
+}
+
+.submitBtn {
+    padding: 10px 20px;
+    background-color: rgb(38, 178, 73);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 150px;
+
+}

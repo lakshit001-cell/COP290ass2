@@ -4,6 +4,8 @@ import { useLocation } from 'react-router-dom';
 
 function Toolbar(){
     const location = useLocation();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const isGlobalAdmin = user.GlobalRole === 'Admin';
    
     const navigate = useNavigate();
     const isPublicPage = ["/", "/login", "/register"].includes(location.pathname);
@@ -19,10 +21,19 @@ function Toolbar(){
             <div className={styles.navLinks}>
                 {showInternal?(
                     <>
+
+
+                        {isGlobalAdmin && (
+                            <Link to="/NewProj" className={styles.link}> Create New Project</Link>
+                        )}
+
+
                         
                         <div className={styles.profilecircle} onClick={() => navigate('/profile')} title="view profile">
 
                         </div>
+
+
 
                     </>
                 ) : (

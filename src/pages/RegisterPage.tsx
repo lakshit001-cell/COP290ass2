@@ -24,7 +24,7 @@ function Register(){
     }
 
 
-    const newUser= {name:name,email:email,ProfilePic:'../profile_icon.jpg', password:password};
+    const newUser= {name:name,email:email,ProfilePic:'../profile_icon.jpg', password:password, GlobalRole:'Admin'};
     localStorage.setItem("user",JSON.stringify(newUser));
     
     

@@ -16,3 +16,8 @@ body, html {
   width: 100%;
   height: 100%;
 }
+
+.navLink {
+    text-decoration: none; /* Removes the underline */
+    color: inherit;        /* Keeps the text color from being "link blue" */
+}

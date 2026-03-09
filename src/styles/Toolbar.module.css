@@ -20,6 +20,9 @@
     cursor: pointer;
     border-radius: 7px;
     display: inline-block;
+    text-decoration: none !important; /* Forces the rule */
+    border-bottom: none !important;  /* In case it's actually a border */
+    display: inline-block;
 }
 
 .navLinks {
@@ -43,4 +46,3 @@
     cursor: pointer;
 
 }
-
