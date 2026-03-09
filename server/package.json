@@ -9,11 +9,18 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.5",
+    "prisma": "^7.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.4.2",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.3.1"
   }
 }
