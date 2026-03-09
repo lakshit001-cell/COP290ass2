@@ -1,11 +1,12 @@
 import styles from '../styles/NewProj.module.css'
 import { useState } from 'react';
 
-function Project() {
+function NewProject() {
     const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [ProjectName, setProjectName] = useState<string>("");
     const [description, setdescription] = useState<string>("");
     const [deadline, setDeadline] = useState("");
+     const [priority, setpriority] = useState<string>("");
 
 
 
@@ -37,7 +38,21 @@ function Project() {
               
               onChange={(e) => setDeadline(e.target.value)} 
               />
+
+
+
               </div>
+             <div className={styles.inputgroup}>
+                <label className={styles.size}>Priority</label>
+              <select className={styles.inputField} onChange={(e) => setpriority(e.target.value)}>
+                     <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select> 
+                
+              </div>
+
+
 
                <div className={styles.inputgroup}>
                 <label className={styles.size}>Description</label>
@@ -67,4 +82,4 @@ function Project() {
 
 }
 
-export default Project;
+export default NewProject;

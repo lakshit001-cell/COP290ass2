@@ -24,8 +24,10 @@ function Toolbar(){
 
 
                         {isGlobalAdmin && (
-                            <Link to="/NewProj" className={styles.link}> Create New Project</Link>
+                            <Link to="/NewProj" className={styles.link}>New Project</Link>
                         )}
+
+                        <Link to="/Projects" className={styles.link}> Projects</Link>
 
 
                         
