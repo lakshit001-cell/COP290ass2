@@ -7,6 +7,9 @@ import Home from './pages/HomePage'
 import Dashboard from './pages/Dashboard';
 import Toolbar from './components/Toolbar'; // Import your new component
 import ProfilePage from './pages/ProfilePage';
+import NewProject from './pages/NewProjPage';
+import Project from './pages/ProjectsPage'
+import ProjectDash from './pages/ProjectDashPage';
 function App() {
   return (
     <>
@@ -22,7 +25,10 @@ function App() {
         <Route path="/Register" element={<Register />} />
         <Route path= "/Dashboard" element= {<Dashboard />} />
         <Route path= "/profile" element= {<ProfilePage/>} />
-        
+        <Route path= "/NewProj" element= {<NewProject/>} />
+        <Route path= "/Projects" element= {<Project/>} />
+        <Route path="/project/:id" element={<ProjectDash />} />
+
       </Routes>
     </>
    

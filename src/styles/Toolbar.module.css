@@ -20,6 +20,9 @@
     cursor: pointer;
     border-radius: 7px;
     display: inline-block;
+    text-decoration: none !important; /* Forces the rule */
+    border-bottom: none !important;  /* In case it's actually a border */
+    display: inline-block;
 }
 
 .navLinks {
@@ -44,3 +47,18 @@
 
 }
 
+
+.notification {
+  width: 38px;
+    height: 38px;
+    background-image: url('../notification.png'); 
+    background-size: cover;      /* Forces the image to fill the 38px */
+    background-position: center;
+    color: white;
+    border-radius: 50%;         /* Makes it a perfect circle */
+    display: flex;
+    align-items: center;        /* Vertically centers the 'U' */
+    justify-content: center;
+    cursor: pointer;
+
+}
