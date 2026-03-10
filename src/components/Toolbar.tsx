@@ -35,6 +35,10 @@ function Toolbar(){
 
                         </div>
 
+                        <div className={styles.notification} onClick={() => navigate('/Notifications')} title="view profile">
+
+                        </div>
+
 
 
                     </>

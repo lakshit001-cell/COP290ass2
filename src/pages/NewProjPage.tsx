@@ -1,12 +1,41 @@
 import styles from '../styles/NewProj.module.css'
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; //
 
 function NewProject() {
     const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [ProjectName, setProjectName] = useState<string>("");
     const [description, setdescription] = useState<string>("");
     const [deadline, setDeadline] = useState("");
-     const [priority, setpriority] = useState<string>("");
+     const [priority, setpriority] = useState<string>("Low");
+     const navigate = useNavigate(); //
+
+     const handleCreate = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevents page reload
+        
+
+        // 1. Create a structured project object
+        const newProject = {
+            id: Date.now().toString(), // Generates a unique ID
+            name: ProjectName,
+            description: description,
+            deadline: deadline,
+            priority: priority,
+            createdAt: new Date().toISOString(),
+            createdBy: existingUser.name
+        };
+
+        // 2. Fetch existing projects or start an empty array
+        const existingProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+
+        // 3. Add the new project to the list and save back to storage
+        const updatedProjects = [...existingProjects, newProject];
+        localStorage.setItem("projects", JSON.stringify(updatedProjects));
+
+        // 4. Industrial Standard: Alert the user and move to the Dashboard
+        
+        navigate('/Projects'); 
+    };
 
 
 
@@ -64,7 +93,7 @@ function NewProject() {
               />
               </div>
 
-              <button type="submit" className={styles.submitBtn}>
+              <button type="submit" className={styles.submitBtn} onClick={handleCreate}>
                     Create
                 </button>
              

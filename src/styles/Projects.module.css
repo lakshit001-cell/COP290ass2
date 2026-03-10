@@ -1,3 +1,114 @@
 .text {
     color: aliceblue;
 }
+
+.backgnd {
+    background-image: url('../backgnd1.jpg'); 
+  
+  
+    background-size: cover;      /* Makes the image fill the whole screen */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from tiling */
+
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px; /* Prevents the image from tiling */
+    padding-top: 20px;
+    padding-left: 10px;
+    padding-right:10px;
+}
+
+.title {
+    color: white;
+    margin-bottom: 30px;
+    font-size: 3rem;
+}
+
+.priorityCorner {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+}
+
+.dot {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    display: block;
+}
+
+.grid {
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding-right: 10px;
+
+
+}
+
+.card {
+    position: relative;
+    background: rgba(20, 20, 20, 0.85); /* Glassmorphism effect */
+    
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    height: 360px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: aliceblue;
+    font-size:x-large;
+    gap:10px;
+}
+
+.projdes {
+    color: #ccc;
+    font-size: 1rem;
+    line-height : 1.5;
+    margin-bottom : 20px;
+    padding-right : 10px; /* Space for the scrollbar to appear */
+    max-height: 200px; 
+    
+    /* 2. Introduce a vertical scrollbar only if the content is too tall */
+    overflow-y: auto; 
+    
+    /* 3. Prevent text from bursting out horizontally */
+    overflow-x: hidden; 
+    overflow-wrap: break-word; 
+    word-wrap : break-word;
+
+}
+
+.bottom {
+    display: flex;
+    flex-direction: row;
+    gap:30px;
+
+    }
+
+
+.EnterBtn{
+     padding: 10px 20px;
+    background-color: rgb(38, 178, 73);
+    color: white;
+    cursor: pointer;
+    
+    border-radius: 5px;
+    width: 100px;
+}
+
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
