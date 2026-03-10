@@ -14,4 +14,5 @@ const userSchema = new Schema<IUser>({
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 
+
 export const User = model<IUser>('User', userSchema);
