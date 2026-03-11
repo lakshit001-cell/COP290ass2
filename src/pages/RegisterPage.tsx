@@ -31,9 +31,13 @@ function Register(){
       });
       const status = await response.json();
 
-      if(status.ok) {
+      if(response.ok) {
         console.log("Registration Successful")
-        navigate('/Dashboard');
+        localStorage.setItem("user", JSON.stringify(status.user));
+        console.log("Successfully saved in localstorage");
+        setTimeout(() => {
+            navigate('/Dashboard');
+        }, 100)
       }
       else{
         alert(status.message);

@@ -33,9 +33,9 @@ export const registration = async (req: Request, res: Response) => {
 
   const user = await User.create({username, email, hashed});
 
-  return res
-    .status(201)
-    .json({id: user.id, message: 'User has been registered.'});
+  return res.status(201).json({message: 'User has been registered.',
+    user:{id: user._id, name: user.username, email: user.email, GlobalRole: user.GlobalRole },
+  });
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             message: "Login Successful, user found",
-            user: {id: user._id, username: user.username, email: user.email }
+            user: {id: user._id, name: user.username, email: user.email, GlobalRole: user.GlobalRole }
         })
     }
     catch(error){
