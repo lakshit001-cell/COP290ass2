@@ -27,13 +27,27 @@
 }
 
 .sidebar {
-   width: 25%; /* Variable width as requested */
+    display: flex;
+    flex-direction: column;
+   width: 15%; /* Variable width as requested */
     height: 100%;
     background:#121212;
     border-left: 1px solid #333;
     overflow-y: auto; /* Sidebar gets its own scrollbar if content is long */
     flex-shrink: 0; 
-    
+    justify-content: flex-start;
+    align-items: center;
+    gap: 50px;
+    padding-top: 50px;
    
 }
 
+
+.item {
+    padding: 10px 20px;
+    background-color: rgb(38, 178, 73);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 80%;
+}

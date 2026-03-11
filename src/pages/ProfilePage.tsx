@@ -22,32 +22,56 @@ function ProfilePage(){
 
 
    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 1. Grab the first file from the explorer
     const file = e.target.files?.[0];
-    if (file) {
-        // 2. Initialize the reader to convert the file
-        const reader = new FileReader();
+    if (!file) return;
 
-        reader.onloadend = () => {
-            // 3. Convert the file into a Base64 string
-            const base64String = reader.result as string;
-
-            // 4. Update LocalStorage so it persists on refresh
-            const storedData = localStorage.getItem("user");
-            if (storedData) {
-                const currentUser = JSON.parse(storedData);
-                const updatedUser = { ...currentUser, profilePic: base64String };
-
-                localStorage.setItem("user", JSON.stringify(updatedUser));
-                
-                // 5. Update local state to show the image immediately
-                setUser(updatedUser); 
-            }
-        };
-
-        // 6. Tell the reader to start processing the image
-        reader.readAsDataURL(file);
+    // Industrial Standard: Limit file size (e.g., 2MB) because localStorage is small (5-10MB total)
+    if (file.size > 2 * 1024 * 1024) {
+        alert("File is too large! Please choose an image under 2MB.");
+        return;
     }
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        // 1. Get current data
+        const storedUser = localStorage.getItem("user");
+        const storedProjects = localStorage.getItem("projects");
+
+        if (storedUser) {
+            const currentUser = JSON.parse(storedUser);
+            
+            // 2. Update the User Object
+            const updatedUser = { ...currentUser, photoURL: base64String };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            
+            // 3. Sync with all Projects (Data Normalization)
+            if (storedProjects) {
+                const allProjects = JSON.parse(storedProjects);
+                
+                const syncedProjects = allProjects.map((project: any) => ({
+                    ...project,
+                    members: project.members.map((member: any) => {
+                        // If this member's email matches the user, update their photo
+                        if (member.email === currentUser.email) {
+                            return { ...member, photoURL: base64String };
+                        }
+                        return member;
+                    })
+                }));
+
+                localStorage.setItem("projects", JSON.stringify(syncedProjects));
+            }
+
+            // 4. Update UI State
+            setUser(updatedUser);
+            
+        }
+    };
+
+    reader.readAsDataURL(file);
 };
 
 

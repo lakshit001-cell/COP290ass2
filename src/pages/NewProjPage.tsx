@@ -22,7 +22,14 @@ function NewProject() {
             deadline: deadline,
             priority: priority,
             createdAt: new Date().toISOString(),
-            createdBy: existingUser.name
+            createdBy: existingUser.name,
+           members: [
+        {
+            name: existingUser.name,
+            email: existingUser.email, // This assumes your 'user' object has an email
+            role: 'Admin'
+        }
+    ]
         };
 
         // 2. Fetch existing projects or start an empty array
