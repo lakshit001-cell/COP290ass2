@@ -8,8 +8,8 @@ function Register(){
     const [confirmPassword,setConfirmPassword]=useState<string>("")
     const [name, setName] = useState<string>("");
     const navigate = useNavigate();
-    
-  const handleRegister = (e: React.FormEvent) => {
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     // Verification Logic: Check if fields match
     if (password !== confirmPassword) {
@@ -17,21 +17,31 @@ function Register(){
       return;
     }
 
+    try{
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: name,
+          email: email,
+          password: password,
+        })
+      });
+      const status = await response.json();
 
-    if (password.length < 8) {
-      alert("Password must be at least 8 characters!");
-      return;
+      if(status.ok) {
+        console.log("Registration Successful")
+        navigate('/Dashboard');
+      }
+      else{
+        alert(status.message);
+      }
     }
-
-
-    const newUser= {name:name,email:email,ProfilePic:'../profile_icon.jpg', password:password, GlobalRole:'Admin'};
-    localStorage.setItem("user",JSON.stringify(newUser));
-    
-    
-    // Industrial Standard: Log the action and move to Dashboard
-    console.log("Registration Successful for:", );
-    // 3. Navigate to dashboard
-    navigate('/dashboard'); 
+    catch(error) {
+      console.error("Server Connection Error", error);
+    }
   };
 
 

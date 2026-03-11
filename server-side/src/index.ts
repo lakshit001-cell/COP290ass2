@@ -1,17 +1,20 @@
 import dotenv from 'dotenv';
 dotenv.config();
+console.log(process.env.MONGO_URI);
 
-import app from "./app.js";
+import app from './app.js';
 import express from 'express';
-import { connectDB } from './config/db';
-
+import {connectDB} from './config/db.js';
 const PORT = 5000;
+const Server = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log('Server is running on port 5000');
+    });
+  } catch (error) {
+    console.error('Server not started for some reason', error);
+  }
+};
 
-app.use(express.json());
-
-// Connect to Database
-connectDB();
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+Server();

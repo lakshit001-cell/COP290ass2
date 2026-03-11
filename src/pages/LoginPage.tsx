@@ -3,8 +3,6 @@ import { Routes, Route, Link } from 'react-router-dom';
 import styles from './Login.module.css';
 import { useNavigate } from 'react-router-dom';
 
-import { loginUser } from '../services/AuthService';
-import { addListener } from 'process';
 function Login(){
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -12,21 +10,38 @@ function Login(){
     const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const savedUserData=localStorage.getItem("user");
-    if(savedUserData){
-        const reguser=JSON.parse(savedUserData);
-        if (email === reguser.email && password === reguser.password) {
-                navigate('/dashboard');
+    try{
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+            })
+        });
+        const data = await response.json();
+        console.log(data.status)
+        if(response.ok) {
+            console.log("Login Successful");
+            localStorage.setItem("user", JSON.stringify(data.user));
+            console.log("Successfully saved in localstorage");
+            setTimeout(() => {
+                navigate('/Dashboard');
+            }, 100)
         }
-        else {
-            alert("invalid credentials")
+        else{
+            console.error("Login suceeded but no data received.")
+            alert(data.message);
         }
-        
     }
-    else {
-        alert("No user found please register first")
+    catch(error) {
+        console.error("Server Connection Error", error);
+        alert("Error");
     }
-    };
+
+    }
         
   return (
     <div className={styles.Wrapper}> 
