@@ -8,7 +8,7 @@ function Register(){
     const [confirmPassword,setConfirmPassword]=useState<string>("")
     const [name, setName] = useState<string>("");
     const navigate = useNavigate();
-
+    
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     // Verification Logic: Check if fields match

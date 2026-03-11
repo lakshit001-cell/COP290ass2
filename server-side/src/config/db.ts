@@ -10,7 +10,7 @@ export const connectDB = async () => {
 
   try {
     await mongoose.connect(uri);
-    console.log('✅ Connected to MongoDB Atlas');
+    console.log('Connected to MongoDB Atlas');
   } catch (error: any) {
     // This will help catch the "Authentication Failed" error specifically
     console.error('MongoDB Connection Error:', error.message);
