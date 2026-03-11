@@ -1,3 +1,39 @@
 .text {
     color: aqua;
 }
+
+.layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    background-color: #0a0a0a;
+   
+
+}
+
+.boards {
+    
+   flex: 1; /* Takes up the remaining 70% */
+    height: 100%;
+    overflow-y: auto; /* The scrollbar stays INSIDE the 70% zone */
+    padding: 20px;
+    background-color: #0a0a0a;
+    
+
+
+
+}
+
+.sidebar {
+   width: 25%; /* Variable width as requested */
+    height: 100%;
+    background:#121212;
+    border-left: 1px solid #333;
+    overflow-y: auto; /* Sidebar gets its own scrollbar if content is long */
+    flex-shrink: 0; 
+    
+   
+}
+
