@@ -21,27 +21,44 @@ function ProfilePage(){
     }
 
 
-   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleImageUpload =  (e: React.ChangeEvent<HTMLInputElement>) => {
     // 1. Grab the first file from the explorer
     const file = e.target.files?.[0];
     if (file) {
         // 2. Initialize the reader to convert the file
         const reader = new FileReader();
 
-        reader.onloadend = () => {
+        reader.onloadend = async () => {
+            try{
             // 3. Convert the file into a Base64 string
-            const base64String = reader.result as string;
+                const base64String = reader.result as string;
 
-            // 4. Update LocalStorage so it persists on refresh
-            const storedData = localStorage.getItem("user");
-            if (storedData) {
-                const currentUser = JSON.parse(storedData);
-                const updatedUser = { ...currentUser, profilePic: base64String };
+                const response = await fetch("http://localhost:5000/api/auth/profile-save", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: user.email,
+                        profile: base64String,
+                    })
+                });
+
+                const data = await response.json();
+
+                if(!response.ok){
+                    console.error("data error", data.error)
+                }
+
+                // 4. Update LocalStorage so it persists on refresh
+                const updatedUser = {...user, profilePic: base64String};
 
                 localStorage.setItem("user", JSON.stringify(updatedUser));
-                
-                // 5. Update local state to show the image immediately
-                setUser(updatedUser); 
+                setUser(updatedUser);
+                console.log("Updated User")
+            }
+            catch(error){
+                console.error("upload Fail", error)
             }
         };
 

@@ -7,6 +7,7 @@ const userSchema = new Schema(
     email: {type: String, required: true, unique: true},
     hashed: {type: String, required: true},
     GlobalRole: {type: String, default: "User"},
+    pfp: {type: String}
   },
   {timestamps: true},
 );
