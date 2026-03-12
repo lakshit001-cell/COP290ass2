@@ -15,6 +15,34 @@ function Settings (){
     const [deadline, setDeadline] = useState("");
     const [priority, setPriority] = useState("");
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [members, setMembers] = useState<any[]>([]);
+    const [selectedRole, setSelectedRole] = useState("Member");
+
+    useEffect(() => {
+    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+    const currentProject = allProjects.find((p: any) => p.id === id);
+    if (currentProject && currentProject.members) {
+        setMembers(currentProject.members);
+    }
+}, [id]);
+
+    // 3. Search logic (runs whenever searchTerm changes)
+    useEffect(() => {
+        if (searchTerm.trim() === "") {
+            setSearchResults([]);
+            return;
+        }
+        const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+        const filtered = allUsers.filter((u: any) => 
+            u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            u.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setSearchResults(filtered);
+    }, [searchTerm]);
+
+
 
     
 
@@ -29,6 +57,32 @@ function Settings (){
             setPriority(currentProject.priority);
         }
     }, [id]);
+
+    const addMember = (user: any) => {
+    if (members.find(m => m.email === user.email)) {
+        alert("User is already in this project!");
+        return;
+    }
+
+    const newMember = { ...user, role: selectedRole };
+    const updatedMembers = [...members, newMember];
+    
+    // Update LocalStorage immediately
+    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+    const updatedProjects = allProjects.map((p: any) => 
+        p.id === id ? { ...p, members: updatedMembers } : p
+    );
+
+    localStorage.setItem("projects", JSON.stringify(updatedProjects));
+    setMembers(updatedMembers);
+    setSearchTerm(""); // Clear search
+};
+
+
+
+
+
+
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,6 +143,9 @@ function Settings (){
     return (
         <div className={styles.backgnd}>
             <h1 className={styles.heading}> Settings </h1>
+
+            <div className={styles.divison}>
+
             <div className={styles.card}>
                 <div className={styles.inputgroup}>
                                 <label className={styles.size}>Project Name</label>
@@ -112,6 +169,8 @@ function Settings (){
                 
                 
                               </div>
+
+
                              <div className={styles.inputgroup}>
                                 <label className={styles.size}>Priority</label>
                               <select value={priority} className={styles.inputField} onChange={(e) => setPriority(e.target.value)}>
@@ -135,7 +194,7 @@ function Settings (){
                               onChange={(e) => setDescription(e.target.value)} 
                               />
                               </div>
-
+                                <div className={styles.buttons}>
                                <div className={styles.bottom}>
 
                                 <button type="submit" className={styles.DiscardBtn} onClick={handlediscard}>
@@ -144,23 +203,83 @@ function Settings (){
                               <button type="submit" className={styles.submitBtn} onClick={handleSave}>
                                     Save
                                 </button>
-
-                                
-
-                                 
-
                                 </div> 
 
 
                                 <button type="submit" className={styles.EndBtn} onClick={handleEnd}>
                                     End Project
                                 </button>
+                            </div>
+
+            </div>
 
 
-
+            <div className={styles.card}>
+                <div className={styles.inputgroup}>
+                                <label className={styles.size}>Add New Member</label>
+                              <input
+                               value={name}
+                              className={styles.inputField}
+                              onChange={(e) => setName(e.target.value)}  required
+                              />
+                              </div>
+                                
+                             <div className={styles.inputgroup}>
+                                <label className={styles.size}>Deadline</label>
+                              <input
+                              type='date'
+                              value={deadline}
+                              className={styles.inputField}
+                              
+                              onChange={(e) => setDeadline(e.target.value)} required
+                              />
                 
+                
+                
+                              </div>
 
 
+                             <div className={styles.inputgroup}>
+                                <label className={styles.size}>Priority</label>
+                              <select value={priority} className={styles.inputField} onChange={(e) => setPriority(e.target.value)}>
+                                     <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                    </select> 
+                                
+                              </div>
+                
+                
+                
+                               <div className={styles.inputgroup}>
+                                <label  className={styles.size}>Description</label>
+                              <textarea
+                              value={description}
+                              
+                              
+                              className={styles.inputFieldd}
+                              
+                              onChange={(e) => setDescription(e.target.value)} 
+                              />
+                              </div>
+                                <div className={styles.buttons}>
+                               <div className={styles.bottom}>
+
+                                <button type="submit" className={styles.DiscardBtn} onClick={handlediscard}>
+                                    Discard
+                                </button>
+                              <button type="submit" className={styles.submitBtn} onClick={handleSave}>
+                                    Save
+                                </button>
+                                </div> 
+
+
+                                <button type="submit" className={styles.EndBtn} onClick={handleEnd}>
+                                    End Project
+                                </button>
+                            </div>
+
+            </div>
 
             </div>
 

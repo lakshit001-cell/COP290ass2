@@ -21,12 +21,12 @@ background-image: url('../backgnd1.jpg');
     padding: 40px;
     border-radius: 10px;
     width: 40%;
-    height: 750px;
+    height: 780px;
     
     display: flex;
     flex-direction: column;
     gap: 40px;
-        align-items: center;
+        align-items: stretch;
     justify-content: flex-start;
     color: #ffffff;
 }
@@ -37,31 +37,35 @@ background-image: url('../backgnd1.jpg');
     font-size: 3rem;
 }
 
-.inputField {
-     padding: 14px;
-    width: 280px;
+.inputField, .inputFieldd, select {
+    width: 100%;         /* Fill the container */
+    box-sizing: border-box; /* Includes padding in the width calculation */
+    padding: 14px;
     border: 2px solid #ccc;
     border-radius: 5px;
+    font-size: 1rem;
+    background-color: white;
+    color: black;
 }
 
 .inputFieldd {
-     padding: 14px;
-     height: 100px;
-    width: 500px;
-    border: 2px solid #ccc;
-    border-radius: 5px;
+    height: 150px;       /* Set a nice height for description */
+    resize: vertical;    /* Allow user to drag it taller if needed */
 }
 
 .inputgroup {
     display: flex;
     flex-direction:column;
-    text-align: left; /* Keep labels aligned to the left */
+     /* Keep labels aligned to the left */
     gap: 8px;
+    width: 100%;
+    
 
 }
 
 .size {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .submitBtn {
@@ -100,7 +104,22 @@ background-image: url('../backgnd1.jpg');
     width: 170px;
     height: 60px;
     font-size: large;
+    border-radius: 7px;
     
 
 }
 
+.buttons {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap:20px;
+}
+
+.divison {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    width: 90%;
+    justify-content: center;
+}

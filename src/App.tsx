@@ -12,6 +12,7 @@ import Project from './pages/ProjectsPage'
 import ProjectDash from './pages/ProjectDashPage';
 import Members from './pages/ProjMembersPage';
 import Settings from './pages/ProjsettingsPage';
+import CompletedProject from './pages/CompletedProjPage';
 function App() {
   return (
     <>
@@ -32,6 +33,7 @@ function App() {
         <Route path="/project/:id" element={<ProjectDash />} />
         <Route path="/project/:id/members" element={<Members />} />
         <Route path="/project/:id/settings" element={<Settings />} />
+        <Route path="/CompletedProjects" element={<CompletedProject />} />
         
 
       </Routes>
