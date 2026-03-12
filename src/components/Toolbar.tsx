@@ -28,6 +28,7 @@ function Toolbar(){
                         )}
 
                         <Link to="/Projects" className={styles.link}> Projects</Link>
+                        <Link to="/CompletedProjects" className={styles.link}> Past Projects</Link>
 
 
                         
@@ -35,7 +36,7 @@ function Toolbar(){
 
                         </div>
 
-                        <div className={styles.notification} onClick={() => navigate('/Notifications')} title="view profile">
+                        <div className={styles.notification} onClick={() => navigate('/Notifications')} title="view Notifications">
 
                         </div>
 

@@ -24,9 +24,15 @@ function ProfilePage(){
    const handleImageUpload =  (e: React.ChangeEvent<HTMLInputElement>) => {
     // 1. Grab the first file from the explorer
     const file = e.target.files?.[0];
-    if (file) {
-        // 2. Initialize the reader to convert the file
-        const reader = new FileReader();
+    if (!file) return;
+
+    // Industrial Standard: Limit file size (e.g., 2MB) because localStorage is small (5-10MB total)
+    if (file.size > 2 * 1024 * 1024) {
+        alert("File is too large! Please choose an image under 2MB.");
+        return;
+    }
+
+    const reader = new FileReader();
 
         reader.onloadend = async () => {
             try{
