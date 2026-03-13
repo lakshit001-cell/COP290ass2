@@ -1,6 +1,8 @@
 import {Request, Response} from 'express';
 import {User} from '../models/user.js';
 import bcrypt from 'bcryptjs';
+import { getToken } from '../utils/token.js';
+import jwt from 'jsonwebtoken';
 
 interface RegisterBody {
   username: string;
@@ -33,7 +35,18 @@ export const registration = async (req: Request, res: Response) => {
 
   const user = await User.create({username, email, hashed});
 
-  return res.status(201).json({message: 'User has been registered.',
+  const {access, refresh} = getToken(user._id);
+
+  res.cookie('refreshToken', refresh, {
+    httpOnly: true,
+    secure: (process.env.NODE_ENV == 'production'),
+    sameSite: 'strict',
+    maxAge: 5*24*60*60*1000,
+  });
+
+  return res.status(201).json({
+    message: 'User has been registered.',
+    access,
     user:{id: user._id, name: user.username, email: user.email, GlobalRole: user.GlobalRole, profilePic: user.pfp, },
   });
 };
@@ -54,14 +67,34 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({message: "Invalid credentials"});
         }
 
+        const {access, refresh} = getToken(user._id);
+
+        res.cookie('refreshToken', refresh, {
+          httpOnly: true,
+          secure: (process.env.NODE_ENV == 'production'),
+          sameSite: 'strict',
+          maxAge: 5*24*60*60*1000,
+        });
+
         return res.status(200).json({
             message: "Login Successful, user found",
+            access, // the access token.
             user: {id: user._id, name: user.username, email: user.email, GlobalRole: user.GlobalRole, profilePic: user.pfp,}
         })
     }
     catch(error){
         res.status(500).json({message: error});
     }
+}
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: (process.env.NODE_ENV == 'production'),
+    sameSite: 'strict',
+  })
+
+  return res.status(200).json({message: "Logged Out"});
 }
 
 export const profile_save = async (req: Request, res: Response) => {

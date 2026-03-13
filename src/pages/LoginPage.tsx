@@ -19,7 +19,8 @@ function Login(){
             body: JSON.stringify({
                 email: email,
                 password: password,
-            })
+            }),
+            credentials: 'include',
         });
         const data = await response.json();
         console.log(data.status)

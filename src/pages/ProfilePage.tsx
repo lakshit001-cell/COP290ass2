@@ -9,15 +9,28 @@ function ProfilePage(){
 
     useEffect(() => {
         const data = localStorage.getItem("user");
+        if(!data){
+            navigate('/login');
+        }
         if (data) {
             setUser(JSON.parse(data));
         }
-    }, []);
+    }, [navigate]);
 
 
-    const handleLogout=() => {
-        localStorage.removeItem("user");
-        navigate('/')
+    const handleLogout= async () => {
+        try{
+            await fetch('http://localhost:5000/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+            })
+            localStorage.removeItem("user");
+            console.log("removed from local storage");
+            navigate('/login');
+        } 
+        catch(error){
+            console.error("Logout failed", error);
+        }
     }
 
 
@@ -71,7 +84,7 @@ function ProfilePage(){
         // 6. Tell the reader to start processing the image
         reader.readAsDataURL(file);
     }
-};
+
 
 
 
@@ -106,7 +119,7 @@ function ProfilePage(){
                 </div>
                 </div>
                 
-                <button className={styles.LogBtn} onClick={()=> navigate('/')} >
+                <button className={styles.LogBtn} onClick={handleLogout} >
                               Logout
                 </button>
 

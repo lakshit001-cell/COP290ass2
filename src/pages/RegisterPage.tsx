@@ -27,7 +27,8 @@ function Register(){
           username: name,
           email: email,
           password: password,
-        })
+        }),
+        credentials: 'include',
       });
       const status = await response.json();
 

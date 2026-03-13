@@ -47,7 +47,8 @@ function NewProject() {
 
 
    
-
+    //checking admin role from local storage is unsafe as anyone can change it using inspect console.
+    
     if (existingUser.GlobalRole !== 'Admin') {
         return <h1 className={styles.text}>Access Denied: Admins Only</h1>;
     }
