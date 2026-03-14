@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 interface ProjectData {
-    id: string;
+    _id: string;
     name: string;
     description: string;
     deadline: string;
@@ -19,8 +19,28 @@ function Project(){
     const navigate = useNavigate(); //
     useEffect(() => {
         // Fetch projects from your storage
-        const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        setProjects(savedProjects);
+        const fetchProjects = async () => {
+            console.log("getting token");
+            const token = localStorage.getItem("accessToken");
+            console.log("fetching");
+            try{
+                const response = await fetch("http://localhost:5000/api/project/user-projects", {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                setProjects(data);
+                console.log("set data");
+            }catch(error){
+                console.error("project fetch Fail", error);
+            }
+        }
+
+        fetchProjects();
     }, []);
 
     const priorityColor: Record<string, string>={
@@ -30,16 +50,12 @@ function Project(){
 
     }
 
-
-    
-
-
     return(
         <div className={styles.backgnd}>
             <h1 className={styles.title}> Your Projects</h1>
             <div className={styles.grid}>
             {projects.map((proj) => (
-                <div key={proj.id} className={styles.card}>
+                <div key={proj._id} className={styles.card}>
 
                     <div className={styles.priorityCorner}>
                     <span 
@@ -62,7 +78,7 @@ function Project(){
                     
                     </div>
                     <div className={styles.center}>
-                    <button className={styles.EnterBtn} onClick={() => navigate(`/project/${proj.id}`)} >
+                    <button className={styles.EnterBtn} onClick={() => navigate(`/project/${proj._id}`)} >
                                   Enter
                     </button>
                     </div>
