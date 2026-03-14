@@ -10,45 +10,54 @@ function NewProject() {
      const [priority, setpriority] = useState<string>("Low");
      const navigate = useNavigate(); //
 
-     const handleCreate = (e: React.FormEvent) => {
+     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault(); // Prevents page reload
         
+        const token = localStorage.getItem("accessToken");
 
-        // 1. Create a structured project object
-        const newProject = {
-            id: Date.now().toString(), // Generates a unique ID
-            name: ProjectName,
-            description: description,
-            deadline: deadline,
-            priority: priority,
-            createdAt: new Date().toISOString(),
-            createdBy: existingUser.name,
-           members: [
-        {
-            name: existingUser.name,
-            email: existingUser.email, // This assumes your 'user' object has an email
-            role: 'Admin'
+        if(!token){
+            console.error("No Access Token found");
+            return;
         }
-    ]
-        };
 
-        // 2. Fetch existing projects or start an empty array
-        const existingProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+        try{
+            const response = await fetch("http://localhost:5000/api/project/new-project", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    name: ProjectName,
+                    deadline: deadline,
+                    priority: priority,
+                    description: description, 
+                })
+            })
 
-        // 3. Add the new project to the list and save back to storage
-        const updatedProjects = [...existingProjects, newProject];
-        localStorage.setItem("projects", JSON.stringify(updatedProjects));
+            const data = await response.json();
 
-        // 4. Industrial Standard: Alert the user and move to the Dashboard
-        
-        navigate('/Projects'); 
+            if(!response.ok){
+                console.error("Error creating project", data.error);
+            }else{
+            // 2. Fetch existing projects or start an empty array
+            // const existingProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+
+            // // 3. Add the new project to the list and save back to storage
+            // const updatedProjects = [...existingProjects, newProject];
+            // localStorage.setItem("projects", JSON.stringify(updatedProjects));
+                navigate('/Projects');
+            }
+        }catch(error){
+            console.error("API/connection error", error);
+        }
     };
 
 
 
    
     //checking admin role from local storage is unsafe as anyone can change it using inspect console.
-    
+
     if (existingUser.GlobalRole !== 'Admin') {
         return <h1 className={styles.text}>Access Denied: Admins Only</h1>;
     }

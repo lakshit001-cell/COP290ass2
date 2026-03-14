@@ -10,6 +10,19 @@ interface RegisterBody {
   password: string;
 }
 
+//refresh for access token
+export const refresh = (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) return res.status(401).json({ message: "Authentication FAiled" });
+
+  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!, (err: any, decoded: any) => {
+    if (err) return res.status(403).json({ message: "Refresh TOken is Invalid" });
+
+    const accessToken = jwt.sign({ id: decoded.id, GlobalRole: decoded.GlobalRole }, process.env.JWT_ACCESS_SECRET!, { expiresIn: '15m' });
+    res.json({ accessToken });
+  });
+};
+
 export const validityCheck = (email: string, pass: string): boolean => {
   const emailChars = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passChars = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -67,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({message: "Invalid credentials"});
         }
 
-        const {access, refresh} = getToken(user._id);
+        const {access, refresh} = getToken(user);
 
         res.cookie('refreshToken', refresh, {
           httpOnly: true,
@@ -78,7 +91,7 @@ export const login = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             message: "Login Successful, user found",
-            access, // the access token.
+            accessToken: access, // the access token.
             user: {id: user._id, name: user.username, email: user.email, GlobalRole: user.GlobalRole, profilePic: user.pfp,}
         })
     }

@@ -25,8 +25,9 @@ function Login(){
         const data = await response.json();
         console.log(data.status)
         if(response.ok) {
-            console.log("Login Successful");
+            console.log("Login Successful", data);
             localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("accessToken", data.accessToken);
             console.log("Successfully saved in localstorage");
             setTimeout(() => {
                 navigate('/Dashboard');

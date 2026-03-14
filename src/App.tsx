@@ -13,7 +13,31 @@ import ProjectDash from './pages/ProjectDashPage';
 import Members from './pages/ProjMembersPage';
 import Settings from './pages/ProjsettingsPage';
 import CompletedProject from './pages/CompletedProjPage';
+import { useEffect, useState } from 'react';
 function App() {
+
+  const[accessToken, setAccessToken] =useState<string | null>(null);
+
+  useEffect(() => {
+    const refresh = async () => {
+      try{
+        const response = await fetch("http://localhost:5000/api/auth/refresh", {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+        if(response.ok){
+          setAccessToken(data.accessToken)
+        }
+      }catch(error){
+        console.error({message: "Token refresh Fail."})
+      }
+    };
+    refresh();
+  })
+
+
   return (
     <>
       <Toolbar/>
