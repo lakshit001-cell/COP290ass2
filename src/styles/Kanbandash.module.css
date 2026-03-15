@@ -1,0 +1,112 @@
+.text {
+    color: aliceblue;
+}
+
+.backgnd {
+
+background-image: url('../backgnd1.jpg'); 
+  
+  
+    background-size: cover;      /* Makes the image fill the whole screen */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from tiling */
+
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: white;
+}
+
+.column {
+    display: flex;
+    flex-direction: row;
+    gap: 60px;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.Card {
+    background-color: rgba(0, 0, 0, 0.793); 
+    padding: 40px;
+    border-radius: 10px;
+    overflow-y: auto;
+    width: 100%;
+    height: 900px;
+    max-width:500px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+        align-items: center;
+    justify-content: flex-start;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+
+}
+
+.Card::-webkit-scrollbar {
+    
+    display: none; /* Hidden by default */
+}
+
+
+
+.header {
+    display: flex;
+    align-items: center;
+    position:absolute;
+}
+
+.topHeader {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end; /* Pushes button to the right */
+    padding: 20px 40px;        /* Adjusts distance from top/side */
+    box-sizing: border-box;
+}
+
+/* The Button Style */
+.TaskBtn {
+    background-color: #26b249; /* Matches your navbar green */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    
+}
+
+
+.Task {
+    position: relative;
+    background: #222;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    width: 90%;
+    cursor: pointer;
+}
+
+
+.priorityTag {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 3px;
+    color: white;
+    text-transform: uppercase;
+}
