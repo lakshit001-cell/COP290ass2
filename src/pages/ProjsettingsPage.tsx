@@ -4,43 +4,64 @@ import styles from '../styles/Projsettings.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { preconnect } from 'react-dom';
+import Popup from '../components/PopupPage';
 
 function Settings (){
     const { id } = useParams();
     const navigate = useNavigate();
+    const [popup, setPopup] = useState({ isOpen: false, title: "", message: "" });
 
     // 1. Form States
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [deadline, setDeadline] = useState("");
     const [priority, setPriority] = useState("");
+    const [addInput, setAddInput] = useState("");
+    const [removeInput, setRemoveInput] = useState("");
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
-    const [members, setMembers] = useState<any[]>([]);
-    const [selectedRole, setSelectedRole] = useState("Member");
+    const openpopoup= (title :string, message :string) => {
+        setPopup({isOpen:true,title,message})
+    };
 
-    useEffect(() => {
-    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const currentProject = allProjects.find((p: any) => p.id === id);
-    if (currentProject && currentProject.members) {
-        setMembers(currentProject.members);
-    }
-}, [id]);
+    const closepopup= ()=> {
+        setPopup({ ...popup, isOpen: false });
+        if (popup.title === "Update succesful" || popup.title === "Settings Saved") {
+            navigate(`/project/${id}`);
+        }
 
-    // 3. Search logic (runs whenever searchTerm changes)
-    useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setSearchResults([]);
+
+    };
+
+const handleUpdate = () => {
+        const isAddActive = addInput.trim() !== "";
+        const isRemoveActive = removeInput.trim() !== "";
+        
+
+        if (!isAddActive && !isRemoveActive) {
+            openpopoup("Missing Information", "please fill atleast one field")
             return;
         }
-        const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-        const filtered = allUsers.filter((u: any) => 
-            u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            u.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSearchResults(filtered);
-    }, [searchTerm]);
+
+        let alertMessage = "";
+
+        if (isAddActive) {
+            openpopoup("Update succesful","user added");
+        }
+
+        if (isRemoveActive) {
+            openpopoup("Update succesful","user removed")
+        }
+
+        
+        
+        // Reset fields and go back
+        setAddInput("");
+        setRemoveInput("");
+        
+    };
+
+    
+    
 
 
 
@@ -58,25 +79,9 @@ function Settings (){
         }
     }, [id]);
 
-    const addMember = (user: any) => {
-    if (members.find(m => m.email === user.email)) {
-        alert("User is already in this project!");
-        return;
-    }
-
-    const newMember = { ...user, role: selectedRole };
-    const updatedMembers = [...members, newMember];
     
-    // Update LocalStorage immediately
-    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const updatedProjects = allProjects.map((p: any) => 
-        p.id === id ? { ...p, members: updatedMembers } : p
-    );
 
-    localStorage.setItem("projects", JSON.stringify(updatedProjects));
-    setMembers(updatedMembers);
-    setSearchTerm(""); // Clear search
-};
+    
 
 
 
@@ -142,6 +147,13 @@ function Settings (){
 
     return (
         <div className={styles.backgnd}>
+            <Popup 
+                isOpen={popup.isOpen} 
+                title={popup.title} 
+                message={popup.message} 
+                onClose={closepopup} 
+            />
+
             <h1 className={styles.heading}> Settings </h1>
 
             <div className={styles.divison}>
@@ -215,68 +227,51 @@ function Settings (){
 
 
             <div className={styles.card}>
+                <h1>Manage Members</h1>
                 <div className={styles.inputgroup}>
                                 <label className={styles.size}>Add New Member</label>
                               <input
-                               value={name}
+                              placeholder='Enter Username or Email'
+                              value={addInput}
+                               
                               className={styles.inputField}
-                              onChange={(e) => setName(e.target.value)}  required
+                              onChange={(e) => setAddInput(e.target.value)}  
                               />
-                              </div>
-                                
-                             <div className={styles.inputgroup}>
-                                <label className={styles.size}>Deadline</label>
+
+
+                               <label className={styles.size}>Remove a Member</label>
                               <input
-                              type='date'
-                              value={deadline}
+                              placeholder='Enter Username or Email'
+                              value={removeInput}
+                               
                               className={styles.inputField}
-                              
-                              onChange={(e) => setDeadline(e.target.value)} required
+                              onChange={(e) => setRemoveInput(e.target.value)}  
                               />
-                
-                
-                
                               </div>
-
-
-                             <div className={styles.inputgroup}>
-                                <label className={styles.size}>Priority</label>
-                              <select value={priority} className={styles.inputField} onChange={(e) => setPriority(e.target.value)}>
-                                     <option value="Low">Low</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="High">High</option>
-                                    </select> 
                                 
-                              </div>
+                             
+
+
+                            
                 
                 
                 
-                               <div className={styles.inputgroup}>
-                                <label  className={styles.size}>Description</label>
-                              <textarea
-                              value={description}
-                              
-                              
-                              className={styles.inputFieldd}
-                              
-                              onChange={(e) => setDescription(e.target.value)} 
-                              />
-                              </div>
+                               
                                 <div className={styles.buttons}>
                                <div className={styles.bottom}>
 
                                 <button type="submit" className={styles.DiscardBtn} onClick={handlediscard}>
                                     Discard
                                 </button>
-                              <button type="submit" className={styles.submitBtn} onClick={handleSave}>
-                                    Save
+
+                                
+                              <button type="submit" className={styles.submitBtn} onClick={handleUpdate}>
+                                    UPDATE
                                 </button>
                                 </div> 
 
 
-                                <button type="submit" className={styles.EndBtn} onClick={handleEnd}>
-                                    End Project
-                                </button>
+                           
                             </div>
 
             </div>

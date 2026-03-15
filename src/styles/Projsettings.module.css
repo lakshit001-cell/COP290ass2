@@ -21,7 +21,7 @@ background-image: url('../backgnd1.jpg');
     padding: 40px;
     border-radius: 10px;
     width: 40%;
-    height: 780px;
+    height: 800px;
     
     display: flex;
     flex-direction: column;
@@ -29,6 +29,7 @@ background-image: url('../backgnd1.jpg');
         align-items: stretch;
     justify-content: flex-start;
     color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .heading {
@@ -57,7 +58,7 @@ background-image: url('../backgnd1.jpg');
     display: flex;
     flex-direction:column;
      /* Keep labels aligned to the left */
-    gap: 8px;
+    gap: 12px;
     width: 100%;
     
 

@@ -4,7 +4,7 @@
 
 .layout {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 80px);
     width: 100vw;
     overflow: hidden;
     position: relative;
@@ -14,6 +14,37 @@
 }
 
 .boards {
+    background-image: url('../backgnd1.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* THE FIXES */
+    min-height: 100vh;           /* Grows if content is longer than the screen */
+    height: auto;               /* Allows the div to expand */
+    background-attachment: fixed; /* Keeps the image still while you scroll */
+    
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px; /* Prevents the image from tiling */
+    padding-top: 20px;
+    padding-left: 10px;
+    padding-right:10px;
+
+    color: white;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: x-large;
+
+
+
     
    flex: 1; /* Takes up the remaining 70% */
     height: 100%;
@@ -22,23 +53,24 @@
     background-color: #0a0a0a;
     
 
-
+ 
 
 }
 
 .sidebar {
     display: flex;
     flex-direction: column;
-   width: 15%; /* Variable width as requested */
+   width: 14%; /* Variable width as requested */
     height: 100%;
     background:#121212;
     border-left: 1px solid #333;
-    overflow-y: auto; /* Sidebar gets its own scrollbar if content is long */
+    
     flex-shrink: 0; 
     justify-content: flex-start;
     align-items: center;
     gap: 50px;
     padding-top: 50px;
+    overflow: hidden;
    
 }
 
@@ -48,6 +80,248 @@
     background-color: rgb(38, 178, 73);
     color: white;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 9px;
     width: 80%;
 }
+
+
+.title {
+    color: white;
+    margin-bottom: 30px;
+    font-size: 3rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.priorityCorner {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+}
+
+.dot {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    display: block;
+}
+
+.grid {
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding-right: 10px;
+    width: 100%;
+
+
+}
+
+.card {
+    position: relative;
+    background: rgba(20, 20, 20, 0.85); /* Glassmorphism effect */
+    
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    height: 360px;
+    padding: 15px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: aliceblue;
+    font-size:x-large;
+    gap:10px;
+    scrollbar-width: none; /* Hides scrollbar for Firefox */
+    -ms-overflow-style: none;
+
+}
+
+.Card::-webkit-scrollbar {
+    width: 6px; /* Very thin */
+    display: none; /* Hidden by default */
+}
+
+.projdes {
+    color: #ccc;
+    font-size: 1rem;
+    line-height : 1.5;
+    margin-bottom : 20px;
+    padding-right : 10px; /* Space for the scrollbar to appear */
+    max-height: 200px; 
+    
+   
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    scrollbar-width: none;       /* Hides for Firefox */
+    -ms-overflow-style: none;    /* Hides for IE/Edge */
+    
+    /* 2. Text handling */
+    overflow-wrap: break-word; 
+    word-wrap: break-word;
+
+}
+
+.projdes::-webkit-scrollbar {
+    display: none; 
+}
+
+.bottom {
+    display: flex;
+    flex-direction: row;
+    gap:60px;
+
+    }
+
+
+.EnterBtn{
+     padding: 10px 20px;
+    background-color: rgb(38, 178, 73);
+    color: white;
+    cursor: pointer;
+    
+    border-radius: 5px;
+    width: 100px;
+}
+
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.card h1 {
+    font-size: 1.8rem;
+    margin-top: 10px;
+    color: white;
+    
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 2;    /* Limits text to exactly 2 lines */
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+    text-overflow: ellipsis;  
+    
+    
+    word-break: break-word; 
+    min-height: 4.4rem;     
+
+}
+
+
+
+.circularMeter {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+}
+
+.innerCircle {
+    width: 44px;
+    height: 44px;
+    background: #141414;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+
+.criticalCard {
+    border: 3px solid #800000 !important;
+    box-shadow: 0 0 15px rgba(128, 0, 0, 0.4);
+    
+}
+
+.criticalBadge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #800000;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    
+}
+
+
+.highCard {
+     border: 3px solid #ea4343 !important;
+   
+
+}
+
+
+.highBadge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #ea4343;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    
+}
+
+
+.mediumCard {
+     border: 3px solid #ffcc00 !important;
+   
+}
+
+
+.mediumBadge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #ffcc00;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    
+}
+
+
+.lowCard {
+     border: 3px solid#28a745 !important;
+    box-shadow: 0 0 15px #28a745(128, 0, 0, 0.4);
+
+}
+
+
+.lowBadge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #28a745;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    
+}
+
+
+
+
+
+
