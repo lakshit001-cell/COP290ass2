@@ -97,6 +97,8 @@
     overflow-wrap: break-word; 
     word-wrap : break-word;
 
+    scrollbar-width: none;
+
 }
 
 .bottom {
