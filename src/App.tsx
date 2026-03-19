@@ -16,6 +16,9 @@ import CompletedProject from './pages/CompletedProjPage';
 import Kanban from './pages/NewKanbanPage';
 import KanbanDash from './pages/KanbandashPage';
 import NewTask from './pages/NewTaskPage';
+import ManageColumn from './pages/ManageColumnPage';
+import TaskDash from './pages/TaskDashPage';
+import NewStory from './pages/NewStoryPage';
 import { useEffect, useState } from 'react';
 function App() {
 
@@ -64,6 +67,9 @@ function App() {
         <Route path="/project/:id/kanbanBoard" element={<Kanban />} />
         <Route path="/project/:id/board/:boardId" element={<KanbanDash />} />" 
         <Route path="/project/:id/board/:boardId/new-task" element={<NewTask />} />
+        <Route path="/project/:id/board/:boardId/Manage" element={<ManageColumn />} />
+        <Route path="/project/:id/board/:boardId/task/:taskId" element={<TaskDash />} />
+        <Route path="/project/:id/board/:boardId/new-story" element={<NewStory />} />
         
 
       </Routes>

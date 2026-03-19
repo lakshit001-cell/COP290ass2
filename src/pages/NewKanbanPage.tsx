@@ -14,40 +14,25 @@ function Kanban (){
      const navigate = useNavigate(); //
 
 
-    const handleCreateBoard = (e: React.FormEvent) => {
+    const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newBoard = {
-        boardId: Date.now().toString(), // Unique ID for the board
-        name: BoardName,
-        description: description,
-        deadline: deadline,
-        priority: priority,
-        createdAt: new Date().toISOString(),
-        stories: [],
-        columns: [
-        { id: "col-todo", name: "To Do", tasks: [], wipLimit: 0 },
-        { id: "col-progress", name: "In Progress", tasks: [], wipLimit: 10 },
-        { id: "col-review", name: "In Review", tasks: [], wipLimit: 10 }, 
-        { id: "col-done", name: "Done", tasks: [], wipLimit: 0 }
-    ]
-        
-    };
-
-    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-
-    const updatedProjects = allProjects.map((proj: any) => {
-        if (proj.id === id) {
-            // Ensure boards array exists, then push new board
-            const currentBoards = proj.boards || [];
-            return { ...proj, boards: [...currentBoards, newBoard] };
-        }
-        return proj;
+    const token = localStorage.getItem("accessToken");
+    const response = await fetch(`http://localhost:5000/api/board/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            projId: id,
+            name: BoardName,
+            description: description,
+            deadline: deadline,
+            priority: priority,
+        })
     });
-
-    localStorage.setItem("projects", JSON.stringify(updatedProjects));
-    navigate(`/project/${id}`);
-
+    if(response.ok) navigate(`/project/${id}`);
     };
 
 

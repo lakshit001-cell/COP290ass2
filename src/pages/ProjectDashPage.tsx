@@ -11,6 +11,7 @@ function ProjectDash (){
     const { id } = useParams();
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [projectRole, setProjectRole] = useState<string>("");
+
     const [boards, setBoards] = useState<any[]>([]);
     const [projectName, setProjectName]= useState<string>("");
 
@@ -25,9 +26,8 @@ function ProjectDash (){
     
    useEffect(() => {
     const fetchProject = async () =>{
-        console.log("getting token");
         const token = localStorage.getItem("accessToken");
-        console.log("fetching");
+
          try{
             const response = await fetch(`http://localhost:5000/api/project/${id}`, {
                 method: 'GET',
@@ -37,11 +37,26 @@ function ProjectDash (){
                 }
             });
             const data = await response.json();
-            if(!response.ok)  alert("Access denied");
+            if(!response.ok) {
+                alert("Access denied");
+                return;
+            }
             setProjectName(data.name)
+            
             
             const member = data.members.find((m: any) => m.user._id === currentUser.id);
             if (member) setProjectRole(member.role);
+
+            const resBoards =  await fetch(`http://localhost:5000/api/board/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            const dataBoards = await resBoards.json();
+            if(resBoards.ok) setBoards(dataBoards);
+
          }catch(error){
             console.error("project fetch Fail", error);
          }
@@ -55,152 +70,94 @@ function ProjectDash (){
     const canAddBoard = projectRole !== 'Viewer';
 
 
-    return(
+     return (
         <div className={styles.layout}>
             <main className={styles.boards}>
-                <h1>
-                    {projectName}
-                </h1>
+                <h1>{projectName}</h1>
 
+                <div className={styles.grid}>
+                    {boards.map((board) => {
+                        // Progress Calculation
+                        const todoCol = board.columns?.find((c:any)=> c.name === "To Do");
+                        const doneCol = board.columns?.find((c:any)=> c.name === "Done");
 
+                        const todoCount = todoCol?.tasks?.length || 0;
+                        const progressCount = board.columns?.Inprogress?.length || 0;
+                        const doneCount = doneCol?.tasks?.length || 0;
+                        
+                        const totalTasks = board.columns?.reduce((acc: number, col: any) => acc + (col.tasks?.length || 0), 0);
+                        const percentage = totalTasks === 0 ? 0 : Math.round((doneCount / totalTasks) * 100);
 
-                 <div className={styles.grid}>
-                            {boards.map((proj) => {
+                        // Priority styling logic
+                        const priorityClass = styles[`${board.priority?.toLowerCase()}Card`] || '';
 
-                                const todoc= proj.columns.todo.length;
-                                const progressCount = proj.columns.Inprogress.length ;
-                            const doneCount = proj.columns.Done.length;
-                            const total=todoc+progressCount+doneCount;
-                            const percentage=total === 0 ? 0 : Math.round((doneCount / total) * 100);
-                            const isCritical= proj.priority === "Critical";
-                            const isHigh= proj.priority === "High";
-                            const isMedium= proj.priority === "Medium";
-                            const isLow= proj.priority === "Low";
+                        return (
+                            <div key={board.id || board._id} className={`${styles.card} ${priorityClass}`}>
+                                {board.priority && (
+                                    <div className={styles[`${board.priority.toLowerCase()}Badge`]}>
+                                        {board.priority}
+                                    </div>
+                                )}
 
-
-
-
-                                return(
-
-
-                                
-                                <div key={proj.id} className={
-                                    `${styles.card} 
-                                ${isCritical ? styles.criticalCard : ''} 
-                                ${isHigh ? styles.highCard : ''} 
-                                ${isMedium ? styles.mediumCard : ''} 
-                                ${isLow ? styles.lowCard : ''}
-                                `}
-                            >
-                                {isCritical && <div className={styles.criticalBadge}>CRITICAL</div>}
-                                {isHigh && <div className={styles.highBadge}>high</div>}
-                                {isMedium && <div className={styles.mediumBadge}>Medium</div>}
-                                {isLow && <div className={styles.lowBadge}>Low</div>}
-                
-                                    <div className={styles.priorityCorner}>
+                                <div className={styles.priorityCorner}>
                                     <span 
-                                     className={styles.dot} 
-                                    style={{ backgroundColor: priorityColor[proj.priority] }}
+                                        className={styles.dot} 
+                                        style={{ backgroundColor: priorityColor[board.priority] }}
                                     ></span>
-                                    </div>
-                
-                
-                
-                                    <div>
-                                    <h1>{ proj.name}</h1>
-                                    </div>
-                
-                
-                                    <div className={styles.projdes}>{proj.description}</div>
-                
-                                    <div className={styles.bottom}>
-                                    <span>{proj.deadline}</span>
-
-                                    <div className={styles.circularMeter}
-                                    style={{background: `conic-gradient(#26b249 ${percentage * 3.6}deg, #333 0deg)`}}
-                                    
-                                    
-                                    >
-                                    <div className={styles.innerCircle}>
-                                    <span>{percentage}%</span>
-                                    </div>
-                                    
-                                        
-
-
-
-
-                                    </div>
-                                    
-                                    </div>
-
-
-                                    <div className={styles.center}>
-                                    <button className={styles.EnterBtn} onClick={() => navigate(`/project/${id}/board/${proj.boardId}`)} >
-                                                  Enter
-                                    </button>
-                                    </div>
-                                    
-                
-                
                                 </div>
-                
-                
-                            )} 
-                        
-                        
-                        
-                        )}
-                            
-                
-                          
-                
-                            </div>
-                
-                            
-                
-                        
-                        
 
+                                <div>
+                                    <h1>{board.name}</h1>
+                                </div>
+
+                                <div className={styles.projdes}>{board.description}</div>
+
+                                <div className={styles.bottom}>
+                                    <span>{board.deadline ? new Date(board.deadline).toLocaleDateString() : 'No deadline'}</span>
+
+                                    <div 
+                                        className={styles.circularMeter}
+                                        style={{ background: `conic-gradient(#26b249 ${percentage * 3.6}deg, #333 0deg)` }}
+                                    >
+                                        <div className={styles.innerCircle}>
+                                            <span>{percentage}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.center}>
+                                    <button 
+                                        className={styles.EnterBtn} 
+                                        onClick={() => navigate(`/project/${id}/board/${board.boardId || board._id}`)}
+                                    >
+                                        Enter
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </main>
 
-           
-
             <aside className={styles.sidebar}>
-
-                <button className={styles.item} onClick={() => navigate(`/project/${id}/members`) }>
-
+                <button className={styles.item} onClick={() => navigate(`/project/${id}/members`)}>
                     View Members
-
                 </button>
-                {canAddBoard && (<button className={styles.item} onClick={() => navigate(`/project/${id}/kanbanBoard`) }>
-
-                    Add Kanban Board
-
-                </button>)}
-
-
-                {canManageSettings && (<button className={styles.item} onClick={() => navigate(`/project/${id}/settings`) }>
-
-                   Manage Project Settings
-
-                </button>)}
-
-
-
                 
+                {canAddBoard && (
+                    <button className={styles.item} onClick={() => navigate(`/project/${id}/kanbanBoard`)}>
+                        Add Kanban Board
+                    </button>
+                )}
 
-
-
+                {canManageSettings && (
+                    <button className={styles.item} onClick={() => navigate(`/project/${id}/settings`)}>
+                        Manage Project Settings
+                    </button>
+                )}
             </aside>
-
-
-
-
         </div>
-
-        
-    )
+    );
 }
 
 export default ProjectDash;
