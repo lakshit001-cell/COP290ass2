@@ -9,7 +9,7 @@ interface ProjectData {
     name: string;
     description: string;
     deadline: string;
-    priority: 'Low' | 'Medium' | 'High'; // String literal types for extra safety
+    priority: 'Low' | 'Medium' | 'High'; // String literal types 
     createdAt: string;
     createdBy: string;
 }
@@ -18,7 +18,7 @@ function Project(){
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const navigate = useNavigate(); //
     useEffect(() => {
-        // Fetch projects from your storage
+        // Fetch projects from storage
         const fetchProjects = async () => {
             console.log("getting token");
             const token = localStorage.getItem("accessToken");
@@ -74,7 +74,7 @@ function Project(){
                     <div className={styles.projdes}>{proj.description}</div>
 
                     <div className={styles.bottom}>
-                    <span>{proj.deadline}</span>
+                    <span>{proj.deadline.split('T')[0]}</span>
                     
                     </div>
                     <div className={styles.center}>

@@ -19,8 +19,25 @@ function CompletedProject(){
     const navigate = useNavigate(); //
     useEffect(() => {
         // Fetch projects from your storage
-        const completedProjects = JSON.parse(localStorage.getItem("completedProjects") || "[]");
-        setProjects(completedProjects);
+        const fetchProjects = async () =>{
+            const token = localStorage.getItem("accessToken");
+
+            try{
+                const response = await fetch('http://localhost:5000/api/project/completed',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                setProjects(data)
+            }catch(error){
+                console.error({message: "Fetch error", error})
+            }
+        } 
+        fetchProjects();
     }, []);
 
     const priorityColor: Record<string, string>={

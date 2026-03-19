@@ -11,7 +11,16 @@ const projectSchema = new Schema(
     members: [{
         user: {type: Schema.Types.ObjectId,  ref: 'User'}, // to link to User Model
         role: {type: String, enum: ['Admin', 'Member', 'Viewer'], default: 'Member'}
-    }]
+    }],
+    completed: {type: Boolean, default: false},
+
+    history: [{
+                field: String, // "status", "assignee", etc.
+                oldValue: Schema.Types.Mixed,
+                newValue: Schema.Types.Mixed,
+                changedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+                timestamp: { type: Date, default: Date.now }
+            }],
   },
   {timestamps: true},
 );

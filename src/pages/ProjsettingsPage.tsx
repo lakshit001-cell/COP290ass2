@@ -10,6 +10,7 @@ function Settings (){
     const { id } = useParams();
     const navigate = useNavigate();
     const [popup, setPopup] = useState({ isOpen: false, title: "", message: "" });
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
     // 1. Form States
     const [name, setName] = useState("");
@@ -32,7 +33,9 @@ function Settings (){
 
     };
 
-const handleUpdate = () => {
+const handleUpdate = async () => {
+
+        const token = localStorage.getItem('accessToken');
         const isAddActive = addInput.trim() !== "";
         const isRemoveActive = removeInput.trim() !== "";
         
@@ -45,15 +48,30 @@ const handleUpdate = () => {
         let alertMessage = "";
 
         if (isAddActive) {
-            openpopoup("Update succesful","user added");
+            const response = await fetch(`http://localhost:5000/api/project/${id}/members/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({email: addInput, role: 'Member'}) // actual user is searched in the backend using email(unique)
+            });
+
+            if(response.ok) openpopoup("Update succesful","user added");
         }
 
         if (isRemoveActive) {
+            const response = await fetch(`http://localhost:5000/api/project/${id}/members/remove`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({email: removeInput}) // actual user is searched in the backend using email(unique)
+            });
             openpopoup("Update succesful","user removed")
         }
 
-        
-        
         // Reset fields and go back
         setAddInput("");
         setRemoveInput("");
@@ -61,46 +79,57 @@ const handleUpdate = () => {
     };
 
     
-    
-
-
-
-    
-
     useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const currentProject = allProjects.find((p: any) => p.id === id);
-
-        if (currentProject) {
-            setName(currentProject.name);
-            setDescription(currentProject.description);
-            setDeadline(currentProject.deadline);
-            setPriority(currentProject.priority);
-        }
-    }, [id]);
-
-    
-
-    
-
-
-
-
-
-
-
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-
-        const updatedProjects = allProjects.map((p: any) => {
-            if (p.id === id) {
-                return { ...p, name, description, deadline, priority };
+        const fetchProject = async () =>{
+        console.log("getting token");
+        const token = localStorage.getItem("accessToken");
+        console.log("fetching");
+         try{
+            const response = await fetch(`http://localhost:5000/api/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await response.json();
+            if(response.ok){
+                setName(data.name);
+                setDescription(data.description);
+                setDeadline(data.deadline.split('T')[0]);
+                setPriority(data.priority);
             }
-            return p;
-        });
+            
+            console.log("set data");
+         }catch(error){
+            console.error("project fetch Fail", error);
+         }
+    }
 
-        localStorage.setItem("projects", JSON.stringify(updatedProjects));
+    fetchProject();
+    }, [id, currentUser.email]);
+        
+
+
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try{
+            const token = localStorage.getItem("accessToken");
+            const response = await fetch(`http://localhost:5000/api/project/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({name, description, deadline, priority})
+            });
+
+            if(!response.ok){console.error("Project details not saved")};
+        }catch(error){
+            console.error("Server error", error);
+        }
         
         navigate(`/project/${id}`);  // Return to Dashboard
     };
@@ -111,35 +140,19 @@ const handleUpdate = () => {
         navigate(`/project/${id}`);
     };
 
-    const handleEnd= (e: React.FormEvent) => {
+    const handleEnd= async (e: React.FormEvent) => {
         e.preventDefault();
         if (!window.confirm("Are you sure you want to end this project? ")) 
             return;
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const completedProjects = JSON.parse(localStorage.getItem("completedProjects") || "[]");
-        const projectToEnd = allProjects.find((p: any) => p.id === id);
-
-    if (projectToEnd) {
-        // Add a timestamp and status for better record-keeping
-        const archivedProject = {
-            ...projectToEnd,
-            status: "Completed",
-            completedAt: new Date().toISOString()
-        };
-
-        // 4. Remove from active projects
-        const updatedActive = allProjects.filter((p: any) => p.id !== id);
-
-        // 5. Add to completed projects
-        const updatedCompleted = [...completedProjects, archivedProject];
-
-        // 6. Save both back to localStorage
-        localStorage.setItem("projects", JSON.stringify(updatedActive));
-        localStorage.setItem("completedProjects", JSON.stringify(updatedCompleted));
-
-       
+        const token = localStorage.getItem('accessToken')
+        const response = await fetch(`http://localhost:5000/api/project/${id}/archive`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization' : `Bearer ${token}`
+            }
+        });
+        if(response.ok) openpopoup("Project Ended", "Moved to Completed");
         navigate('/Projects'); // Redirect to the main projects list
-    }
     };
 
 

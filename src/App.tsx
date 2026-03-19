@@ -13,6 +13,9 @@ import ProjectDash from './pages/ProjectDashPage';
 import Members from './pages/ProjMembersPage';
 import Settings from './pages/ProjsettingsPage';
 import CompletedProject from './pages/CompletedProjPage';
+import Kanban from './pages/NewKanbanPage';
+import KanbanDash from './pages/KanbandashPage';
+import NewTask from './pages/NewTaskPage';
 import { useEffect, useState } from 'react';
 function App() {
 
@@ -58,6 +61,9 @@ function App() {
         <Route path="/project/:id/members" element={<Members />} />
         <Route path="/project/:id/settings" element={<Settings />} />
         <Route path="/CompletedProjects" element={<CompletedProject />} />
+        <Route path="/project/:id/kanbanBoard" element={<Kanban />} />
+        <Route path="/project/:id/board/:boardId" element={<KanbanDash />} />" 
+        <Route path="/project/:id/board/:boardId/new-task" element={<NewTask />} />
         
 
       </Routes>

@@ -6,25 +6,44 @@ import { useParams } from 'react-router-dom';
 import defaultIcon from '../profile_icon.jpg';
 
 interface Member{
-    name : string;
-    email : string;
+    user: {
+        _id : string
+        name : string;
+        email : string;
+        role: string;
+        pfp ? : string;
+    };
     role: string;
-    Photourl ? : string;
-    
-
 }
 
 function Members() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [members, setMembers] = useState<Member[]>([]);
 
     useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const currentProject = allProjects.find((p: any) => p.id === id);
-        if (currentProject) {
-            setMembers(currentProject.members);
-        }
+        const fetchProject = async () =>{
+        console.log("getting token");
+        const token = localStorage.getItem("accessToken");
+        console.log("fetching");
+         try{
+            const response = await fetch(`http://localhost:5000/api/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await response.json();
+            setMembers(data.members || []);
+            console.log("set data");
+         }catch(error){
+            console.error("project fetch Fail", error);
+         }
+    }
+
+    fetchProject();
     }, [id]);
 
 
@@ -49,8 +68,8 @@ function Members() {
                             
                             <div className={styles.avatar}>
                                 <img 
-                                src={m.Photourl || defaultIcon}
-                                alt={m.name}
+                                src={m.user.pfp || defaultIcon}
+                                alt={m.user.name}
                                 className={styles.avatarImg}
                                 >
                                 
@@ -63,11 +82,11 @@ function Members() {
                                
             
                                 <div>
-                                <h2>{ m.name}</h2>
+                                <h2>{ m.user.name}</h2>
                                 </div>
             
             
-                                <h2> {m.email} </h2>
+                                <h2> {m.user.email} </h2>
                             </div>
             
             

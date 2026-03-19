@@ -24,31 +24,35 @@ function ProjectDash (){
 
     
    useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const currentProject = allProjects.find((p: any) => p.id === id);
+    const fetchProject = async () =>{
+        console.log("getting token");
+        const token = localStorage.getItem("accessToken");
+        console.log("fetching");
+         try{
+            const response = await fetch(`http://localhost:5000/api/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await response.json();
+            if(!response.ok)  alert("Access denied");
+            setProjectName(data.name)
+            
+            const member = data.members.find((m: any) => m.user._id === currentUser.id);
+            if (member) setProjectRole(member.role);
+         }catch(error){
+            console.error("project fetch Fail", error);
+         }
+    }
 
-        if (currentProject) {
-            setProjectName(currentProject.name);
-            // Set the boards from this project
-            setBoards(currentProject.boards || []);
-
-            // Set the role
-            const memberEntry = currentProject.members.find((m: any) => m.email === currentUser.email);
-            if (memberEntry) {
-                setProjectRole(memberEntry.role);
-            }
-        }
+    fetchProject();
     }, [id, currentUser.email]);
 
     // Permissions Helper Functions
     const canManageSettings = currentUser.GlobalRole === 'Admin' || projectRole === 'Owner';
     const canAddBoard = projectRole !== 'Viewer';
-
-
-
-
-
-
 
 
     return(
