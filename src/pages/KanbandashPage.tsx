@@ -4,6 +4,13 @@ import styles from '../styles/Kanbandash.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
+interface Column {
+    id: string;
+    name: string;
+    wipLimit: number;
+    tasks: Task[];
+}
+
 
 interface TaskEvent {
     event: string;
@@ -18,15 +25,16 @@ interface Task {
     assignedTo: string;
     history: TaskEvent[];
     status :string;
+    type: "Task" | "Bug";
+    parentId?: string;
 }
 
 function KanbanDash () {
 
     const navigate = useNavigate();
     const { id, boardId } = useParams();
-    const [todoTasks, setTodoTasks] = useState<Task[]>([]);
-    const [inProgressTasks, setInProgressTasks] = useState<Task[]>([]);
-    const [doneTasks, setDoneTasks] = useState<Task[]>([]);
+    const [columns, setColumns] = useState<Column[]>([]);
+    const [stories, setStories] = useState<any[]>([]);
 
     const priorityColor: Record<string, string>={
         High: "#ea4343",   // Red
@@ -36,91 +44,58 @@ function KanbanDash () {
 
     }
 
-const moveTask = (taskId: string, newStatus: string) => {
-    
-    const statusRank: Record<string, number> = {
-        "todo": 0,
-        "Inprogress": 1,
-        "Done": 2
-    };
-
+const moveTask = (taskId: string, targetColId: string) => {
+    // 1. Load data as usual...
     const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const projectIndex = allProjects.findIndex((p: any) => p.id === id);
-    const boardIndex = allProjects[projectIndex]?.boards.findIndex((b: any) => b.boardId === boardId);
-
-   
-
-    const board = allProjects[projectIndex].boards[boardIndex];
-    const cols = board.columns;
-
-    let taskToMove: Task | null = null;
-    let currentStatus = "";
-
-    // 2. Locate the task without removing it yet
-    const columnNames = Object.keys(statusRank); // ['todo', 'Inprogress', 'Done']
-    for (const colName of columnNames) {
-        const index = cols[colName].findIndex((t: Task) => String(t.id) === String(taskId));
-        if (index !== -1) {
-            taskToMove = cols[colName][index];
-            currentStatus = colName;
-            break;
-        }
-    }
-
-    // 3. Handle the "Null" error or "Backwards" movement
+    const project = allProjects.find((p: any) => p.id === id);
+    const board = project.boards.find((b: any) => b.boardId === boardId);
     
+    // 2. Find Source and Target columns
+    const sourceColIndex = board.columns.findIndex((col: any) => 
+        col.tasks.some((t: any) => String(t.id) === String(taskId))
+    );
+    const targetColIndex = board.columns.findIndex((col: any) => col.id === targetColId);
 
-    if (statusRank[newStatus] <= statusRank[currentStatus]) {
-       
+    // 3. THE NEW FORWARD-ONLY CHECK
+    // If target index is less than or equal to source, block it
+    if (targetColIndex <= sourceColIndex) {
+        alert("Workflow Error: You can only move tasks forward.");
         return;
     }
 
-    // 4. Perform the actual move (Splice from old, Push to new)
-    const sourceIndex = cols[currentStatus].findIndex((t: Task) => String(t.id) === String(taskId));
-    const extractedTask = cols[currentStatus].splice(sourceIndex, 1)[0];
+    // 4. WIP LIMIT CHECK
+    const targetCol = board.columns[targetColIndex];
+    if (targetCol.wipLimit > 0 && targetCol.tasks.length >= targetCol.wipLimit) {
+        alert(`WIP Limit Reached for ${targetCol.name}!`);
+        return;
+    }
 
-    // Update status and record the event
-    extractedTask.status = newStatus;
+    // 5. Perform the move and save...
+    const taskIndex = board.columns[sourceColIndex].tasks.findIndex((t: any) => String(t.id) === String(taskId));
+    const [task] = board.columns[sourceColIndex].tasks.splice(taskIndex, 1);
     
-    // Safety check for history/log array
-    if (!extractedTask.history) extractedTask.history = [];
-    
-    extractedTask.history.push({
-        event: `Moved from ${currentStatus} to ${newStatus}`,
-        timestamp: new Date().toLocaleString()
-    });
+    task.status = targetCol.name;
+    targetCol.tasks.push(task);
 
-    cols[newStatus].push(extractedTask);
-
-    // 5. Save back to LocalStorage
     localStorage.setItem("projects", JSON.stringify(allProjects));
-    
-    // 6. Refresh the local state to trigger a re-render
-    setTodoTasks([...cols.todo]);
-    setInProgressTasks([...cols.Inprogress]);
-    setDoneTasks([...cols.Done]);
-    };
+    // Trigger state update for columns array
+    setColumns([...board.columns]);
+};
 
     useEffect(() => {
-        // 1. Get the data
         const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
         const currentProject = allProjects.find((p: any) => p.id === id);
+        const currentBoard = currentProject?.boards?.find((b: any) => b.boardId === boardId);
 
-        if (currentProject) {
-            // 2. Find the specific board
-            const currentBoard = currentProject.boards?.find((b: any) => b.boardId === boardId);
-            
-            if (currentBoard && currentBoard.columns) {
-                // 3. Set tasks into simple states
-                setTodoTasks(currentBoard.columns.todo || []);
-                setInProgressTasks(currentBoard.columns.Inprogress || []);
-                setDoneTasks(currentBoard.columns.Done || []);
-            }
+        if (currentBoard && currentBoard.columns) {
+            setColumns(currentBoard.columns);
+            setStories(currentBoard.stories || []);
         }
     }, [id, boardId]);
 
     const render= (task:Task) => {
         const color= priorityColor[task.priority];
+        const parentStory = stories.find(s => String(s.id) === String(task.parentId));
         return (
             <div key={task.id}  className={styles.Task} 
                 
@@ -134,16 +109,32 @@ const moveTask = (taskId: string, newStatus: string) => {
 
                 }}
                 
-                
-                
                 >
+
+                    
 
                 <div className={styles.priorityTag} style={{ backgroundColor: color }}>
                     {task.priority}
                 </div>
                 
+                <div className={styles.size}>
                 <p><strong>{task.name}</strong></p>
+                
+                </div>
                 <span>Assigned to: {task.assignedTo}</span>
+
+
+                {parentStory && (<div className={styles.text}>
+                    Story: <p><strong> {parentStory.name}</strong></p> 
+                   
+                       
+                         </div>
+                    )}
+
+                <div className={styles.bold}>
+                <p><strong>{task.type}</strong></p>
+                </div>
+
             </div>
 
         );
@@ -169,22 +160,42 @@ const moveTask = (taskId: string, newStatus: string) => {
         
         <div className={styles.backgnd}>
             <div className={styles.topHeader}>
+                <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-story`)}>
+                    + New Story
+                </button>
                 <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-task`)}>
                     + New Task
                 </button>
+
+                <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/Manage`)}>
+                    Manage Columns
+                </button>
             </div>
 
-            <div className={styles.column} >
-                <div  className={styles.Card} 
-                onDragOver={handleDragover}
-                onDrop={(e) => handleDrop(e, "todo")}
 
-                >
-           
+            <div className={styles.column} >
+                {columns.map((col)=>
+                <div  key={col.id} 
+                        className={styles.Card} 
+                        onDragOver={(e) => e.preventDefault()} 
+                        onDrop={(e) => moveTask(e.dataTransfer.getData("taskId"), col.id)}>
+
+
+                            <h1>{col.name}</h1>
+                            {col.wipLimit > 0 && (
+                            <span className={styles.wipLabel}>WIP: {col.tasks.length}/{col.wipLimit}</span>
+                        )}
+                            {col.tasks.map(render)}
+
+
+                    </div>
             
-                <h1 > To Do</h1>
-                {todoTasks.map(render)}
-                </div>
+            
+            
+            
+            )}
+
+               
 
                     
 
@@ -192,24 +203,10 @@ const moveTask = (taskId: string, newStatus: string) => {
 
             
 
-            <div className={styles.Card} onDragOver={handleDragover} 
-            onDrop={(e) => handleDrop(e, "Inprogress")} >
-                <h1> In Progress</h1>
-                {inProgressTasks.map(render)}
-                    
+            
 
-           
 
-            </div>
-
-            <div className={styles.Card} onDragOver={handleDragover} onDrop={(e) => handleDrop(e, "Done")}>
-                <h1> Done</h1>
-                {doneTasks.map(render)}
-                   
-
-          
-
-            </div>
+             
 
             </div>
             </div>

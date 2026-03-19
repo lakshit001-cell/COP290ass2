@@ -1,0 +1,144 @@
+.backgnd {
+    background-image: url('../backgnd1.jpg');
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    flex-direction: column;
+    font-size: x-large;
+    gap:20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+.card {
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+    gap: 20px;
+    scrollbar-width: none;           
+    
+}
+
+
+.columnList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;      
+    margin-top: 20px;
+    width: 100%;
+}
+
+.colRow {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #333;
+}
+
+.reorderGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.orderBtn {
+    background: #ffffff;
+    color: #040404;
+    
+    border-radius: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+.orderBtn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.inputGroup { flex: 3; display: flex; flex-direction: column; gap: 5px; }
+.wipGroup { flex: 1.5; display: flex; flex-direction: column; gap: 5px; }
+
+.inputGroup label, .wipGroup label {
+    font-size: 0.7rem;
+    color: #e0e0e0;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.inputGroup input, .wipGroup input {
+    background: #ffffff;
+    border: 1px solid #444;
+    color: rgb(0, 0, 0);
+    padding: 10px;
+    border-radius: 4px;
+    
+}
+
+
+
+.deleteBtn {
+    background: #ea4343;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.buttonActions { display: flex; justify-content: center; 
+    margin-top: 30px;
+    align-items: center;
+flex-direction: row;
+
+
+}
+.addBtn {
+
+    position: absolute; 
+    top: 15px;          
+    right: 40px;
+     
+ 
+font-weight: bold; 
+
+
+
+ padding: 10px 20px;
+    background-color: rgb(38, 178, 73);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 150px;
+}
+
+
+.rightButtons { display: flex; gap: 10px; }
+
+
+
+.saveBtn { background: #26b249;
+     color: white;
+      padding: 10px 25px;
+       border-radius: 6px;
+        font-weight: bold; 
+        cursor: pointer; }
+.cancelBtn { 
+    background:red;
+     color: #ffffff; border: 1px solid #444;
+      padding: 10px 20px;
+       border-radius: 6px; 
+       font-weight: bold; 
+      cursor: pointer; }

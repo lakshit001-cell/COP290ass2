@@ -24,12 +24,13 @@ function Kanban (){
         deadline: deadline,
         priority: priority,
         createdAt: new Date().toISOString(),
-        columns: {
-            todo : [],
-            Inprogress: [],
-            Done :[]
-
-        }
+        stories: [],
+        columns: [
+        { id: "col-todo", name: "To Do", tasks: [], wipLimit: 0 },
+        { id: "col-progress", name: "In Progress", tasks: [], wipLimit: 10 },
+        { id: "col-review", name: "In Review", tasks: [], wipLimit: 10 }, 
+        { id: "col-done", name: "Done", tasks: [], wipLimit: 0 }
+    ]
         
     };
 

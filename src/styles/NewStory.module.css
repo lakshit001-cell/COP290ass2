@@ -17,11 +17,11 @@
 }
 
 .card {
-    background: rgba(18, 18, 18, 0.755);
+    background: rgba(18, 18, 18, 0.838);
     padding: 40px;
     border-radius: 10px;
     width: 600px;
-    height: 840px;
+    height: 580px;
     display: flex;
     flex-direction: column;
     gap: 10px; 
@@ -31,6 +31,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow-y: auto; 
     scrollbar-width: none;
+    gap: 30px;
 }
 
 .card h1 {
