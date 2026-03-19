@@ -1,23 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import styles from '../styles/NewTask.module.css';
-import { useNavigate } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
-
-interface TaskEvent {
-    event: string;
-    time: string;
-}
-interface Task {
-    id: string;
-    name: string;
-    description: string;
-    deadline: string;
-    priority: string;
-    status: "todo"
-    assignedTo: string;
-    log : TaskEvent[];
-}
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface Member {
     name: string;
@@ -25,128 +8,178 @@ interface Member {
     role: string;
 }
 
+interface Story {
+    id: string;
+    name: string;
+}
 
-function NewTask () 
-{
-   const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
-       const [TaskName, setTaskName] = useState<string>("");
-       const [description, setdescription] = useState<string>("");
-       const [deadline, setDeadline] = useState("");
-        const [priority, setpriority] = useState<string>("Low");
-        const [assignedTo, setAssignedTo] = useState<string>("Unassigned");
-        const { id, boardId } = useParams();
-        const [projectMembers, setProjectMembers] = useState<Member[]>([]);
-        const navigate = useNavigate(); 
+interface Column {
+    id: string;
+    name: string;
+}
 
-        useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const currentProject = allProjects.find((p: any) => p.id === id);
+function NewTask() {
+    const { id, boardId } = useParams();
+    const navigate = useNavigate();
+
+    
+    const [taskType, setTaskType] = useState<'Task' | 'Bug'>('Task');
+    const [taskName, setTaskName] = useState("");
+    const [description, setdescription] = useState("");
+    const [deadline, setDeadline] = useState("");
+    const [priority, setpriority] = useState("Low");
+    const [assignedTo, setAssignedTo] = useState("Unassigned");
+    
+    
+    const [selectedStoryId, setSelectedStoryId] = useState("");
+    const [targetColumnName, setTargetColumnName] = useState("");
+
+    // Data from LocalStorage
+    const [projectMembers, setProjectMembers] = useState<Member[]>([]);
+    const [stories, setStories] = useState<Story[]>([]);
+    const [columns, setColumns] = useState<Column[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+   useEffect(() => {
+    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+    const project = allProjects.find((p: any) => String(p.id) === String(id));
+    const board = project?.boards.find((b: any) => String(b.boardId) === String(boardId));
+
+    if (project && board) {
+        setProjectMembers(project.members || []);
+        setStories(board.stories || []);
+        setColumns(board.columns || []);
         
-        if (currentProject && currentProject.members) {
-            setProjectMembers(currentProject.members);
+        // --- ADD THIS LINE ---
+        // Automatically set the first column as the target
+        if (board.columns && board.columns.length > 0) {
+            setTargetColumnName(board.columns[0].name);
         }
-        }, [id]);
+    }
+    setIsLoaded(true);
+}, [id, boardId]);
 
-        const handleCreate = () => {
-        if (!TaskName.trim()) {
-            alert("Please enter a task name");
+    const handleCreate = () => {
+        if (!taskName.trim()) {
+            alert("Please enter a name");
             return;
         }
 
-        
-
         const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+        const pIdx = allProjects.findIndex((p: any) => String(p.id) === String(id));
+        const bIdx = allProjects[pIdx].boards.findIndex((b: any) => String(b.boardId) === String(boardId));
         
-        // Find the specific project and board
-        const projectIndex = allProjects.findIndex((p: any) => p.id === id);
-        if (projectIndex === -1) return;
-
-        const boardIndex = allProjects[projectIndex].boards.findIndex((b: any) => b.boardId === boardId);
-        if (boardIndex === -1) return;
-
-        // Create the new task object
-        const newTask: Task = {
-            id: Date.now().toString(),
-            name: TaskName,
+        const newTask = {
+            id: `work-${Date.now()}`,
+            type: taskType,
+            name: taskName,
             description,
             deadline,
             priority,
-            status: "todo",
+            status: targetColumnName,
             assignedTo,
-            log : [
+            parentId: selectedStoryId, 
+            history: [
                 { 
-                    event: `Task Created and assigned to ${assignedTo}`, 
-                    time: new Date().toLocaleString() 
-        }
-
+                    event: `Created as ${taskType} in ${targetColumnName}`, 
+                    timestamp: new Date().toLocaleString() 
+                }
             ]
-
-
-             // New tasks start in the 'todo' column
         };
 
-        // Push into the 'todo' array of the specific board
-        // Assuming your board structure is { boards: [{ boardId, columns: { todo: [], Inprogress: [], Done: [] } }] }
-        if (!allProjects[projectIndex].boards[boardIndex].columns) {
-            allProjects[projectIndex].boards[boardIndex].columns = { todo: [], Inprogress: [], Done: [] };
+        const targetCol = allProjects[pIdx].boards[bIdx].columns.find(
+            (c: any) => c.name === targetColumnName
+        );
+        
+        if (targetCol) {
+            targetCol.tasks.push(newTask);
+            localStorage.setItem("projects", JSON.stringify(allProjects));
+            navigate(`/project/${id}/board/${boardId}`);
+        } else {
+            alert("Please select a valid target column.");
         }
-
-        allProjects[projectIndex].boards[boardIndex].columns.todo.push(newTask);
-
-        // Save back to localStorage
-        localStorage.setItem("projects", JSON.stringify(allProjects));
-        
-        
-        navigate(`/project/${id}/board/${boardId}`); // Go back to the board
     };
-   
-        
-   
-   
-   
-      
-   
-       
-       return (
-           <div className={styles.backgnd}>
-               <div className={styles.card}>
-                    <h1>Create Task</h1>
-              
-                 <div className={styles.inputgroup}>
-                   <label className={styles.size}>Task Name</label>
-                 <input
-                 type='text'
-                 className={styles.inputField}
-                 
-                 onChange={(e) => setTaskName(e.target.value)} 
-                 />
-                 </div>
-                   
-                <div className={styles.inputgroup}>
-                   <label className={styles.size}>Deadline</label>
-                 <input
-                 type='date'
-                 className={styles.inputField}
-                 
-                 onChange={(e) => setDeadline(e.target.value)} 
-                 />
+
+
+
+    const handleDiscard=()=>{
+        navigate(-1);
+    }
+
+    return (
+        <div className={styles.backgnd}>
+            <h1>Create Task</h1>
+            <div className={styles.card}>
                 
 
-   
-   
-                 </div>
-
-
-                 <div className={styles.inputgroup}>
-                <label className={styles.size}>Assign To</label>
+            <div className={styles.inputgroup}>
+            <label className={styles.size}>Type</label>
                     <select 
                         className={styles.inputField} 
-                        value={assignedTo}
-                        onChange={(e) => setAssignedTo(e.target.value)}>
+                        
+                        onChange={(e) => setTaskType(e.target.value as 'Task' | 'Bug')}>
+                        <option value="Task">Task</option>
+                        <option value="Bug">Bug</option>
+                    </select>
+                </div>
 
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}>{taskType} Name</label>
+                    <input 
+                        type='text' 
+                        className={styles.inputField} 
+                       
+                        onChange={(e) => setTaskName(e.target.value)} 
+                    />
+                </div>
 
+                
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}> Story</label>
+                    <select 
+                        className={styles.inputField} 
+                       
+                        onChange={(e) => setSelectedStoryId(e.target.value)}
+                    >
+                        <option value="">Independent</option>
+                        {stories.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+               
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}>Column</label>
+                    <select 
+                        className={styles.inputField} 
+                        value={targetColumnName}
+                       
+                        onChange={(e) => setTargetColumnName(e.target.value)}
+                    >
+                        {columns.map(c => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}>Deadline</label>
+                    <input 
+                        type='date' 
+                        className={styles.inputField} 
+                        onChange={(e) => setDeadline(e.target.value)} 
+                    />
+                </div>
+
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}>Assign To</label>
+                    <select 
+                        className={styles.inputField} 
+                       
+                        onChange={(e) => setAssignedTo(e.target.value)}
+                    >
                         <option value="Unassigned">Select a member</option>
-
                         {projectMembers.map((member, index) => (
                             <option key={index} value={member.name}>
                                 {member.name} 
@@ -155,46 +188,44 @@ function NewTask ()
                     </select>
                 </div>
 
+                <div className={styles.inputgroup}>
+                    <label className={styles.size}>Priority</label>
+                    <select 
+                        className={styles.inputField} 
+                   
+                        onChange={(e) => setpriority(e.target.value)}
+                    >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select> 
+                </div>
 
                 <div className={styles.inputgroup}>
-                   <label className={styles.size}>Priority</label>
-                 <select className={styles.inputField} onChange={(e) => setpriority(e.target.value)}>
-                        <option value="Low">Low</option>
-                           <option value="Medium">Medium</option>
-                           <option value="High">High</option>
-                           <option value="High">Critical</option>
-                           
-                       </select> 
-                   
-                 </div>
-   
-   
-   
-                  <div className={styles.inputgroup}>
-                   <label className={styles.size}>Description</label>
-                 <textarea
-                 
-                 className={styles.inputFieldd}
-                 
-                 onChange={(e) => setdescription(e.target.value)} 
-                 />
-                 </div>
-   
-                 <button type="submit" className={styles.submitBtn} onClick={handleCreate}>
-                       Create
-                   </button>
-                
-   
-   
-   
-                 
-   
-   
-   
-               </div>
-   
-           </div>
-       )
+                    <label className={styles.size}>Description</label>
+                    <textarea
+                        className={styles.inputFieldd}
+                        onChange={(e) => setdescription(e.target.value)} />
+
+
+                </div>
+
+                <div className={styles.bottom}>
+                    <button type="button" className={styles.DiscardBtn} onClick={(handleDiscard)}>
+                        Discard
+                    </button>
+
+                    <button type="button" className={styles.submitBtn} onClick={handleCreate}>
+                        Save
+                    </button>
+
+
+
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default NewTask;

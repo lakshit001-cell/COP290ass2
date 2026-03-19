@@ -1,0 +1,144 @@
+.backgnd {
+    background-image: url('../backgnd1.jpg');
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    gap:20px;
+    font-size: x-large;
+    position: relative; /* Essential for absolute positioning of children */
+    padding: 60px 0;
+    scrollbar-width: none;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: row;
+    gap: 30px; /* Space between the two cards */
+    width: 95%;
+    max-width: 1200px;
+    align-items: flex-start;
+}
+
+.card {
+    background-color: rgba(0, 0, 0, 0.764);
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 650px;
+    height: 800px;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap:8px;
+}
+
+
+
+
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+}
+
+.inputGroup label {
+    color: #bababa;
+    font-weight: bold;
+    font-size: 1.1rem;
+    
+}
+
+.inputGroup input, .inputGroup select, .inputGroup textarea {
+    background: #e0e0e0;
+    border: 2px solid #444;
+    color: rgb(8, 8, 8);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+ 
+.inputGroup textarea {
+    height: 100px;
+    resize: none;
+}
+
+.bottom {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+   
+}
+
+.saveBtn {
+    background: #26b249;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.DiscardBtn {
+    background: #b83615;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+
+.loglist {
+    max-height: 600px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 10px;
+}
+
+
+.log {
+    background: #111;
+    padding: 15px;
+    border-left: 4px solid #26b249;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column; 
+    gap: 5px;
+}
+
+.topHeader {
+    position: absolute; 
+    top: 25px;         /* Distance from top of screen */
+    right: 40px;        /* Distance from right of screen */
+    z-index: 10;
+}
+
+.TaskBtn {
+    background-color: #26b249; /* Matches your navbar green */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    
+}
