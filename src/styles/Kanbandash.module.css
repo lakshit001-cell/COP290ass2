@@ -103,8 +103,11 @@ background-image: url('../backgnd1.jpg');
     font-weight: bold;
     cursor: pointer;
     font-size: 1rem;
+    text-align: left;
     
 }
+
+
 
 
 .Task {
