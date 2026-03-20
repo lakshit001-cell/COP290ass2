@@ -35,6 +35,7 @@ function KanbanDash () {
     const { id, boardId } = useParams();
     const [columns, setColumns] = useState<Column[]>([]);
     const [stories, setStories] = useState<any[]>([]);
+    const [filterStoryId, setFilterStoryId] = useState<string>("all");
 
     const priorityColor: Record<string, string>={
         High: "#ea4343",   // Red
@@ -160,6 +161,35 @@ const moveTask = (taskId: string, targetColId: string) => {
         
         <div className={styles.backgnd}>
             <div className={styles.topHeader}>
+
+                <div>
+                    <select
+                    className={styles.TaskBtn}
+                    value={filterStoryId}
+                    onChange={(e) => setFilterStoryId(e.target.value)}>
+
+                    <option value="all">
+                        Track All
+
+                    </option>
+
+
+                    {stories.map((s=>
+
+                        <option
+                        key={s.id} value={s.id}
+                        >
+                            {s.name}
+
+                        </option>
+                    ))}
+
+                    </select>
+
+                </div>
+
+
+
                 <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-story`)}>
                     + New Story
                 </button>
@@ -170,6 +200,10 @@ const moveTask = (taskId: string, targetColId: string) => {
                 <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/Manage`)}>
                     Manage Columns
                 </button>
+
+                 
+
+
             </div>
 
 
@@ -182,10 +216,11 @@ const moveTask = (taskId: string, targetColId: string) => {
 
 
                             <h1>{col.name}</h1>
+
                             {col.wipLimit > 0 && (
                             <span className={styles.wipLabel}>WIP: {col.tasks.length}/{col.wipLimit}</span>
                         )}
-                            {col.tasks.map(render)}
+                            {col.tasks.filter(t => filterStoryId === "all" || String(t.parentId) === String(filterStoryId)).map(render)}
 
 
                     </div>
