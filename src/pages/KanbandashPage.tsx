@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, data } from 'react-router-dom';
 import styles from '../styles/Kanbandash.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
+import TaskDash from './TaskDashPage';
 
 interface Column {
     id: string;
@@ -17,7 +18,8 @@ interface TaskEvent {
     timestamp: string;
 }
 interface Task {
-    id: string;
+    id?: string;
+    _id?: string;
     name: string;
     description: string;
     deadline: string;
@@ -45,17 +47,19 @@ function KanbanDash () {
 
     }
 
-const moveTask = (taskId: string, targetColId: string) => {
-    // 1. Load data as usual...
-    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const project = allProjects.find((p: any) => p.id === id);
-    const board = project.boards.find((b: any) => b.boardId === boardId);
+const moveTask = async (taskId: string, targetColId: string) => {
+
+
+    const targetCol = columns.find((c: any) => c.id.toString() === targetColId);
+    const initCol = columns.find((c:any) => c.tasks.some((t:any)=> t.id.toString() === taskId));
+
+    if(!targetCol || !initCol) return;
     
     // 2. Find Source and Target columns
-    const sourceColIndex = board.columns.findIndex((col: any) => 
+    const sourceColIndex = columns.findIndex((col: any) => 
         col.tasks.some((t: any) => String(t.id) === String(taskId))
     );
-    const targetColIndex = board.columns.findIndex((col: any) => col.id === targetColId);
+    const targetColIndex = columns.findIndex((col: any) => col.id === targetColId);
 
     // 3. THE NEW FORWARD-ONLY CHECK
     // If target index is less than or equal to source, block it
@@ -65,48 +69,80 @@ const moveTask = (taskId: string, targetColId: string) => {
     }
 
     // 4. WIP LIMIT CHECK
-    const targetCol = board.columns[targetColIndex];
     if (targetCol.wipLimit > 0 && targetCol.tasks.length >= targetCol.wipLimit) {
         alert(`WIP Limit Reached for ${targetCol.name}!`);
         return;
     }
 
-    // 5. Perform the move and save...
-    const taskIndex = board.columns[sourceColIndex].tasks.findIndex((t: any) => String(t.id) === String(taskId));
-    const [task] = board.columns[sourceColIndex].tasks.splice(taskIndex, 1);
-    
-    task.status = targetCol.name;
-    targetCol.tasks.push(task);
+    try{
+        const token = localStorage.getItem("accessToken")
+        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/move`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                newcol: targetCol.name,
+                oldCol: initCol.name, 
+            })
+        })
 
-    localStorage.setItem("projects", JSON.stringify(allProjects));
-    // Trigger state update for columns array
-    setColumns([...board.columns]);
+        if(response.ok) window.location.reload();
+    }catch(error){
+        console.error("Patch error", error);
+    }
 };
 
     useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const currentProject = allProjects.find((p: any) => p.id === id);
-        const currentBoard = currentProject?.boards?.find((b: any) => b.boardId === boardId);
+        const getBoardData = async () => {
+            const token = localStorage.getItem("accessToken");
+            if(!token) console.error("No token found");
+            const header = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
 
-        if (currentBoard && currentBoard.columns) {
-            setColumns(currentBoard.columns);
-            setStories(currentBoard.stories || []);
-        }
+            try{
+                const resBoard = await fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, {headers: header} );
+                const dataBoard = await resBoard.json();
+
+                const resTask = await fetch(`http://localhost:5000/api/task/board/${boardId}`, {headers: header} );
+                const dataTask = await resTask.json();
+
+                if(resTask.ok){
+                    const newColumns = dataBoard.board.columns.map((col: any) => ({
+                    ...col,
+                    tasks: dataTask.filter((task:any)=> task.status === col.name)
+                    
+                }));
+                setColumns(newColumns);
+                }
+                if (!resTask.ok){console.log("Task not fetched")};
+
+                setStories(dataBoard.stories);
+                
+            }catch(error){
+                console.error("fetch fail", error);
+            }
+        };
+        getBoardData();
     }, [id, boardId]);
 
     const render= (task:Task) => {
         const color= priorityColor[task.priority];
-        const parentStory = stories.find(s => String(s.id) === String(task.parentId));
+        const actualTaskId = task.id || (task as any)._id;
+        const parentStory = stories.find(s => String(s.id || s._id) === String(task.parentId));
         return (
-            <div key={task.id}  className={styles.Task} 
+            <div key={actualTaskId}  className={styles.Task} 
                 
                 
                 style={{ borderLeft: `8px solid ${color}` }} 
-                onClick={() => navigate(`/project/${id}/board/${boardId}/task/${task.id}`)}
+                onClick={() => navigate(`/project/${id}/board/${boardId}/task/${actualTaskId}`)}
                 draggable="true"
                 onDragStart={(e)=>{
 
-                    e.dataTransfer.setData("taskId", task.id);
+                    e.dataTransfer.setData("taskId", actualTaskId);
 
                 }}
                 
@@ -174,10 +210,10 @@ const moveTask = (taskId: string, targetColId: string) => {
                     </option>
 
 
-                    {stories.map((s=>
+                    {stories.map((s)=>(
 
                         <option
-                        key={s.id} value={s.id}
+                        key={s.id || s._id} value={s.id || s._id}
                         >
                             {s.name}
 
@@ -209,7 +245,7 @@ const moveTask = (taskId: string, targetColId: string) => {
 
             <div className={styles.column} >
                 {columns.map((col)=>
-                <div  key={col.id} 
+                <div  key={col.id || col.name} 
                         className={styles.Card} 
                         onDragOver={(e) => e.preventDefault()} 
                         onDrop={(e) => moveTask(e.dataTransfer.getData("taskId"), col.id)}>

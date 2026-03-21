@@ -35,72 +35,92 @@ function NewTask() {
     const [targetColumnName, setTargetColumnName] = useState("");
 
     // Data from LocalStorage
-    const [projectMembers, setProjectMembers] = useState<Member[]>([]);
+    const [projectMembers, setProjectMembers] = useState([]);
     const [stories, setStories] = useState<Story[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
    useEffect(() => {
-    const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const project = allProjects.find((p: any) => String(p.id) === String(id));
-    const board = project?.boards.find((b: any) => String(b.boardId) === String(boardId));
 
-    if (project && board) {
-        setProjectMembers(project.members || []);
-        setStories(board.stories || []);
-        setColumns(board.columns || []);
-        
-        // --- ADD THIS LINE ---
-        // Automatically set the first column as the target
-        if (board.columns && board.columns.length > 0) {
-            setTargetColumnName(board.columns[0].name);
+    const fetchData = async () => {
+        const token = localStorage.getItem("accessToken");
+        const header = {
+            'Authorization' : `Bearer ${token}`,
+            'Content-Type' : 'application/json',
+        }
+        try{
+            const resProject = await fetch(`http://localhost:5000/api/project/${id}`, {headers: header});
+            const projData = await resProject.json();
+
+            const resBoard = await fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, {headers: header})
+            const boardData = await resBoard.json();
+
+            if(resBoard.ok && resProject.ok){
+                setProjectMembers(projData.members || []);
+                setStories(boardData.stories || []);
+                setColumns(boardData.board.columns);
+
+                if (boardData.board.columns && boardData.board.columns.length > 0) {
+                    setTargetColumnName(boardData.board.columns[0].name);
+                }
+                setIsLoaded(true);
+            }
+
+        }catch(error){
+            console.error("fetch fail", error)
         }
     }
-    setIsLoaded(true);
+    fetchData();
 }, [id, boardId]);
 
-    const handleCreate = () => {
-        if (!taskName.trim()) {
-            alert("Please enter a name");
-            return;
-        }
+    const handleCreate =async () => {
 
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const pIdx = allProjects.findIndex((p: any) => String(p.id) === String(id));
-        const bIdx = allProjects[pIdx].boards.findIndex((b: any) => String(b.boardId) === String(boardId));
-        
-        const newTask = {
-            id: `work-${Date.now()}`,
-            type: taskType,
-            name: taskName,
-            description,
-            deadline,
-            priority,
-            status: targetColumnName,
-            assignedTo,
-            parentId: selectedStoryId, 
-            history: [
-                { 
-                    event: `Created as ${taskType} in ${targetColumnName}`, 
-                    timestamp: new Date().toLocaleString() 
-                }
-            ]
-        };
+    if (!taskName.trim() || !targetColumnName) {
+        alert("Please enter a name and select a column");
+        return;
+    }
 
-        const targetCol = allProjects[pIdx].boards[bIdx].columns.find(
-            (c: any) => c.name === targetColumnName
-        );
-        
-        if (targetCol) {
-            targetCol.tasks.push(newTask);
-            localStorage.setItem("projects", JSON.stringify(allProjects));
-            navigate(`/project/${id}/board/${boardId}`);
-        } else {
-            alert("Please select a valid target column.");
-        }
+    const token = localStorage.getItem("accessToken");
+
+    
+    const newTask = {
+        type: taskType,           // "Task" | "Bug"
+        name: taskName,
+        story: "",
+        column: targetColumnName, // The status/column name
+        description: description,
+        assignee: assignedTo,     // The user name or ID
+        deadline: deadline,
+        priority: priority
     };
 
+    if(selectedStoryId != 'Independent') newTask.story = selectedStoryId
 
+    try {
+        const response = await fetch(`http://localhost:5000/api/task/create/${boardId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newTask)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Task created successfully!");
+        
+            navigate(`/project/${id}/board/${boardId}`);
+        } else {
+            alert(data.message || "Failed to create task");
+        }
+
+    } catch (error) {
+        console.error("Create task fail", error);
+        alert("Server error while creating task");
+    }
+    };
 
     const handleDiscard=()=>{
         navigate(-1);
@@ -180,9 +200,9 @@ function NewTask() {
                         onChange={(e) => setAssignedTo(e.target.value)}
                     >
                         <option value="Unassigned">Select a member</option>
-                        {projectMembers.map((member, index) => (
-                            <option key={index} value={member.name}>
-                                {member.name} 
+                        {projectMembers.map((member:any, index: number) => (
+                            <option key={member.user._id || index} value={member.user._id}>
+                                {member.user.username} ({member.role}) 
                             </option>
                         ))}
                     </select>

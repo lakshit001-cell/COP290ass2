@@ -9,7 +9,7 @@ export const createBoard = async (req: any, res: Response) => {
         const project = await Project.findById(projId);
         if(!project) return res.status(404).json({message: "Project not found"});
 
-        const columns = [
+        const newcolumns = [
             {name: "To Do", ordered: 0, wipLimit: 0},
             {name: "In Progress", ordered: 1, wipLimit: 10},
             {name: "In Review", ordered: 2, wipLimit: 10},
@@ -22,7 +22,7 @@ export const createBoard = async (req: any, res: Response) => {
             description: description,
             deadline: deadline,
             priority: priority,
-            columns: columns,
+            columns: newcolumns,
 
         })
 

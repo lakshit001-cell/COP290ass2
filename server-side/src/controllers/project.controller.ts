@@ -49,7 +49,7 @@ export const projectDetails = async (req: any, res: Response) => {
         const {id} = req.params;
 
         const project = await Project.findById(id).populate([
-            {path: 'members.user', select: 'name email pfp'},
+            {path: 'members.user', select: 'username email pfp'},
             {path: 'createdBy', select: 'name'}
         ])
 
@@ -106,13 +106,6 @@ export const updateProject = async (req: any, res: Response) => {
             field: 'description', // "status", "assignee", etc.
             oldValue: project.description,
             newValue: description,
-            changedBy: req.user.id
-        })};
-        if(priority && priority!== project.priority){
-            changes.push({
-            field: 'priority', // "status", "assignee", etc.
-            oldValue: project.priority,
-            newValue: priority,
             changedBy: req.user.id
         })};
         if(deadline && deadline!== project.deadline){

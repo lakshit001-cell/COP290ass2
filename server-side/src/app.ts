@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/project.routes.js'
 import boardRoutes from './routes/board.routes.js'
+import taskRoutes from './routes/task.routes.js'
 
 const app: Application = express();
 
@@ -19,5 +20,6 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/project', projectRoutes)
 app.use('/api/board', boardRoutes)
+app.use('/api/task', taskRoutes)
 
 export default app;

@@ -40,26 +40,45 @@ function TaskDash() {
     const [stories, setStories] = useState<any[]>([]); // NEW: State for stories
 
     useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const project = allProjects.find((p: any) => String(p.id) === String(id));
-        
-        if (project) {
-            setProjectMembers(project.members || []);
-            const board = project.boards.find((b: any) => String(b.boardId) === String(boardId));
-            
-            // NEW: Fetch stories from the board
-            if (board) {
-                setStories(board.stories || []);
-            }
-            
-            let foundTask = null;
-            board?.columns.forEach((col: any) => {
-                const t = col.tasks.find((item: any) => String(item.id) === String(taskId));
-                if (t) foundTask = t;
-            });
-            setTask(foundTask);
+        if (!taskId || taskId === "undefined") {
+            console.warn("TaskId is not available yet.");
+            return; 
         }
-    }, [id, boardId, taskId]);
+        const fetchData = async () => {
+            const token = localStorage.getItem("accessToken");
+            const header = {
+            'Authorization' : `Bearer ${token}`,
+            'Content-Type' : 'application/json',
+        }
+            try{
+                const [resProj, resBoard, resTask] = await Promise.all([
+                    fetch(`http://localhost:5000/api/project/${id}`, { headers: header }),
+                    fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, { headers: header }),
+                    fetch(`http://localhost:5000/api/task/${taskId}`, {headers: header})
+                ]);
+                const projData = await resProj.json();
+                const boardData = await resBoard.json();
+                const taskData = await resTask.json();
+
+                const isProjOk = resProj.ok || resProj.status === 304;
+                const isBoardOk = resBoard.ok || resBoard.status === 304;
+                const isTaskOk = resTask.ok || resTask.status === 304;
+                if(isBoardOk && isProjOk && isTaskOk){
+                    setProjectMembers(projData.members);
+                    const board = boardData.board;
+                    setStories(boardData.stories || []);
+                    setTask(taskData);
+                }else{
+                    if(!resProj.ok) return console.error("Project not ok");
+                    if(!resBoard.ok) return console.error("Board not ok");
+                    if(!resTask.ok) return console.error("Task not ok");
+                }
+            }catch(error){
+                console.error("fetch data fail", error);
+            }
+        }
+        fetchData();
+        }, [id, boardId, taskId]);
 
     const handleSave = () => {
         const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");

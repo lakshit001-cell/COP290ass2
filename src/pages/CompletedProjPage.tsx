@@ -75,7 +75,7 @@ function CompletedProject(){
                     <div className={styles.projdes}>{proj.description}</div>
 
                     <div className={styles.bottom}>
-                    <span>{proj.deadline}</span>
+                    <span>{proj.deadline.split('T')[0]}</span>
                     
                     </div>
                     <div className={styles.center}>
