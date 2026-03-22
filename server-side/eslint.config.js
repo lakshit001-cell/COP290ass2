@@ -12,4 +12,4 @@ if (hasIgnoresFile) {
   customConfig = [{ignores}];
 }
 
-module.exports = [...customConfig, ...require('gts')];
+export default  [...customConfig, ...require('gts')];
