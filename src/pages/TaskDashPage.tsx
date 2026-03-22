@@ -58,7 +58,7 @@ function TaskDash() {
                     setProjectMembers(projData.members.filter((m: any) => m.role !== 'Viewer'));
                     setStories(boardData.stories || []);
                     setTask(taskData);
-                    setComments(commData.comment || []);
+                    setComments(commData.comment ||commData || []);
                 }
             } catch (error) {
                 console.error("Fetch data failed:", error);
@@ -132,7 +132,12 @@ function TaskDash() {
 
             if (response.ok) {
                 const savedComment = await response.json();
-                setComments(prev => [...prev, savedComment]);
+                const newCom = {
+                    ...savedComment,
+                    body: savedComment.content, 
+                    createdAt: new Date().toISOString() 
+                };
+                setComments(prev => [...prev, newCom]);
                 if (editorRef.current) editorRef.current.innerHTML = "";
             }
         } catch (error) {
@@ -251,8 +256,8 @@ function TaskDash() {
                 <div className={styles.ccard}>
                     <h1>Discussion</h1>
                     <div className={styles.comments}>
-                        {comments.map((c: any) => (
-                            <div key={c._id} className={styles.commentItem}>
+                        {comments.map((c: any, index: number) => (
+                            <div key={c._id || index} className={styles.commentItem}>
                                 <div className={styles.commentHeader}>
                                     <strong>{c.author?.username || "User"}</strong>
                                     <span>{new Date(c.createdAt || Date.now()).toLocaleString()}</span>
@@ -268,31 +273,172 @@ function TaskDash() {
                         ))}
                     </div>
 
-                    <div className={styles.editorBox}>
+                     <div className={styles.editorBox}>
+
                         <div className={styles.toolbar}>
-                            <button onClick={() => runCommand('bold')}>B</button>
-                            <button onClick={() => runCommand('italic')}>I</button>
+
+                            <button onClick={() => runCommand('bold')}>
+
+                                B
+
+                                </button>
+
+
+
+                            <button onClick={() => runCommand('italic')}
+
+                                >I
+
+
+
+                            </button>
+
+
+
                             <button onClick={() => runCommand('underline')}>U</button>
-                            <div style={{position: 'relative', display: 'inline-block'}}>
-                                <button onClick={() => setShowMentions(!showMentions)}>@ Mention</button>
+
+                            <button onClick={()=>runCommand('insertUnorderedList')} title="Bullet List">
+
+                                 . List
+
+                           
+
+
+
+                            </button>
+
+
+
+
+
+                            <button
+
+                            onMouseDown={(e)=>{e.preventDefault(); runCommand('formatBlock', '<pre>'); }} title="CODE Block">
+
+                                Enter Code
+
+                               
+
+                            </button>
+
+
+
+
+
+                            <button
+
+                            onMouseDown={(e)=>{e.preventDefault(); runCommand('insertHTML', '</pre><div><br></div>'); }} title=" Exit CODE Block">
+
+                                Exit Code
+
+                               
+
+                            </button>
+
+
+
+                            <button onMouseDown={(e) => {e.preventDefault();
+
+                                const selection= window.getSelection() ?.toString();
+
+                                if (selection) {
+
+                                    runCommand('createLink',selection)
+
+                                }
+
+                            }} title="ADD Link">
+
+                                Link
+
+
+
+
+
+                            </button>
+
+                            <input type="color" onChange={(e) => runCommand('foreColor', e.target.value)} />
+
+                           
+
+                            <select className={styles.font} onChange={(e) => runCommand('fontName', e.target.value)}
+
+                                defaultValue="Segoe UI">
+
+
+
+
+
+                                <option value="Segoe UI">Segoe UI</option>
+
+                                <option value="Arial">Arial</option>
+
+                                <option value="Courier New">Monospace</option>
+
+                                <option value="Georgia">Serif</option>
+
+                                <option value="Verdana">Verdana</option>
+
+                                <option value="Tahoma">Tahoma</option>
+
+                                <option value="Trebuchet MS">Trebuchet</option>
+
+                                <option value="Garamond">Garamond</option>
+
+
+
+                            </select>
+
+                           
+
+                            <div style={{position: 'relative'}}>
+
+                                <button
+
+                                    className={showMentions ? styles.activeBtn : ""}
+
+                                    onClick={() => setShowMentions(!showMentions)}>
+
+                                     Mention
+
+                                </button>
+
+                               
+
                                 {showMentions && (
+
                                     <ul className={styles.mentionDropdown}>
+
                                         {projectMembers.map(m => (
+
                                             <li key={m.user?._id} onClick={() => insertMention(m)}>
-                                                {m.user?.username}
+
+                                                {m.user?.username || m.name}
+
                                             </li>
+
                                         ))}
+
                                     </ul>
+
                                 )}
+
                             </div>
+
+                           
+
                         </div>
-                        <div 
-                            ref={editorRef} 
-                            className={styles.editableArea} 
-                            contentEditable={true}
-                            onKeyDown={(e) => { if (e.key === '@') setShowMentions(true); }}
-                        ></div>
-                        <button className={styles.postBtn} onClick={handleAddComment}>Post Comment</button>
+
+                        <div ref={editorRef} className={styles.editableArea} contentEditable={true}></div>
+
+                        <button className={styles.postBtn} onClick= {handleAddComment}>
+
+                            Post Comment
+
+                            </button>
+
+                       
+
                     </div>
                 </div>
             </div>

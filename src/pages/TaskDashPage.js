@@ -2,9 +2,6 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../styles/TaskDash.module.css';
-/**
- * Helper to transform [[user:id]] placeholders into styled HTML spans
- */
 const displayBody = (body, members) => {
     if (!body)
         return "";
@@ -28,7 +25,6 @@ function TaskDash() {
     const [stories, setStories] = useState([]);
     const [showMentions, setShowMentions] = useState(false);
     const editorRef = useRef(null);
-    // Initial Data Fetching
     useEffect(() => {
         if (!taskId || taskId === "undefined")
             return;
@@ -53,7 +49,7 @@ function TaskDash() {
                     setProjectMembers(projData.members.filter((m) => m.role !== 'Viewer'));
                     setStories(boardData.stories || []);
                     setTask(taskData);
-                    setComments(commData.comment || []);
+                    setComments(commData.comment || commData || []);
                 }
             }
             catch (error) {
@@ -74,7 +70,6 @@ function TaskDash() {
         document.execCommand('insertHTML', false, mentionHtml);
         setShowMentions(false);
     };
-    // API Actions
     const handleSaveTask = async () => {
         try {
             const response = await fetch(`http://localhost:5000/api/task/update/${taskId}`, {
@@ -98,7 +93,6 @@ function TaskDash() {
         const content = editorRef.current?.innerHTML;
         if (!content || content === "<br>" || content.trim() === "")
             return;
-        // Convert HTML mentions back to stored string format [[user:id]]
         const dbContent = content.replace(/<span[^>]*data-id="([^"]*)"[^>]*>@.*?<\/span>/g, '[[user:$1]]');
         const doc = new DOMParser().parseFromString(content, 'text/html');
         const mentionIds = Array.from(doc.querySelectorAll('.mention-tag'))
@@ -119,7 +113,12 @@ function TaskDash() {
             });
             if (response.ok) {
                 const savedComment = await response.json();
-                setComments(prev => [...prev, savedComment]);
+                const newCom = {
+                    ...savedComment,
+                    body: savedComment.content,
+                    createdAt: new Date().toISOString()
+                };
+                setComments(prev => [...prev, newCom]);
                 if (editorRef.current)
                     editorRef.current.innerHTML = "";
             }
@@ -146,7 +145,12 @@ function TaskDash() {
     };
     if (!task)
         return _jsx("div", { className: styles.backgnd, children: _jsx("div", { className: styles.container, children: _jsx("h1", { children: "Loading Task..." }) }) });
-    return (_jsx("div", { className: styles.backgnd, children: _jsxs("div", { className: styles.container, children: [_jsxs("div", { className: styles.card, children: [_jsx("h1", { children: "Task Settings" }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Task Name" }), _jsx("input", { type: "text", value: task.name || "", onChange: (e) => setTask({ ...task, name: e.target.value }) })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Story Context" }), _jsxs("select", { value: task.parentStory?._id || task.parentStory || "", onChange: (e) => setTask({ ...task, parentStory: e.target.value }), children: [_jsx("option", { value: "", children: "Independent Task" }), stories.map(s => (_jsx("option", { value: s._id, children: s.name }, s._id)))] })] }), _jsxs("div", { className: styles.row, children: [_jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Priority" }), _jsxs("select", { value: task.priority, onChange: (e) => setTask({ ...task, priority: e.target.value }), children: [_jsx("option", { value: "Low", children: "Low" }), _jsx("option", { value: "Medium", children: "Medium" }), _jsx("option", { value: "High", children: "High" }), _jsx("option", { value: "Critical", children: "Critical" })] })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Assigned To" }), _jsxs("select", { value: task.assignee?._id || task.assignee || "Unassigned", onChange: (e) => setTask({ ...task, assignee: e.target.value === "Unassigned" ? null : e.target.value }), children: [_jsx("option", { value: "Unassigned", children: "Unassigned" }), projectMembers.map((m) => (_jsx("option", { value: m.user?._id, children: m.user?.username }, m.user?._id)))] })] })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Deadline" }), _jsx("input", { type: "date", value: task.deadline ? task.deadline.split('T')[0] : "", onChange: (e) => setTask({ ...task, deadline: e.target.value }) })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Description" }), _jsx("textarea", { value: task.description || "", onChange: (e) => setTask({ ...task, description: e.target.value }) })] }), _jsxs("div", { className: styles.bottom, children: [_jsx("button", { className: styles.DiscardBtn, onClick: () => navigate(-1), children: "Discard" }), _jsx("button", { className: styles.saveBtn, onClick: handleSaveTask, children: "Save Changes" })] })] }), _jsxs("div", { className: styles.card, children: [_jsx("h1", { children: "Task History Log" }), _jsx("div", { className: styles.loglist, children: task.history?.slice().reverse().map((entry, idx) => (_jsxs("div", { className: styles.log, children: [_jsxs("span", { children: [_jsx("b", { children: entry.field }), ": ", entry.oldValue, " \u2794 ", _jsx("b", { children: entry.newValue })] }), _jsx("small", { children: new Date(entry.timestamp).toLocaleString() })] }, idx))) })] }), _jsxs("div", { className: styles.ccard, children: [_jsx("h1", { children: "Discussion" }), _jsx("div", { className: styles.comments, children: comments.map((c) => (_jsxs("div", { className: styles.commentItem, children: [_jsxs("div", { className: styles.commentHeader, children: [_jsx("strong", { children: c.author?.username || "User" }), _jsx("span", { children: new Date(c.createdAt || Date.now()).toLocaleString() }), _jsx("div", { className: styles.commentaction, children: _jsx("button", { onClick: () => handleDeleteComment(c._id), children: "X" }) })] }), _jsx("div", { className: styles.commentContent, dangerouslySetInnerHTML: { __html: displayBody(c.body, projectMembers) } })] }, c._id))) }), _jsxs("div", { className: styles.editorBox, children: [_jsxs("div", { className: styles.toolbar, children: [_jsx("button", { onClick: () => runCommand('bold'), children: "B" }), _jsx("button", { onClick: () => runCommand('italic'), children: "I" }), _jsx("button", { onClick: () => runCommand('underline'), children: "U" }), _jsxs("div", { style: { position: 'relative', display: 'inline-block' }, children: [_jsx("button", { onClick: () => setShowMentions(!showMentions), children: "@ Mention" }), showMentions && (_jsx("ul", { className: styles.mentionDropdown, children: projectMembers.map(m => (_jsx("li", { onClick: () => insertMention(m), children: m.user?.username }, m.user?._id))) }))] })] }), _jsx("div", { ref: editorRef, className: styles.editableArea, contentEditable: true, onKeyDown: (e) => { if (e.key === '@')
-                                        setShowMentions(true); } }), _jsx("button", { className: styles.postBtn, onClick: handleAddComment, children: "Post Comment" })] })] })] }) }));
+    return (_jsx("div", { className: styles.backgnd, children: _jsxs("div", { className: styles.container, children: [_jsxs("div", { className: styles.card, children: [_jsx("h1", { children: "Task Settings" }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Task Name" }), _jsx("input", { type: "text", value: task.name || "", onChange: (e) => setTask({ ...task, name: e.target.value }) })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Story Context" }), _jsxs("select", { value: task.parentStory?._id || task.parentStory || "", onChange: (e) => setTask({ ...task, parentStory: e.target.value }), children: [_jsx("option", { value: "", children: "Independent Task" }), stories.map(s => (_jsx("option", { value: s._id, children: s.name }, s._id)))] })] }), _jsxs("div", { className: styles.row, children: [_jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Priority" }), _jsxs("select", { value: task.priority, onChange: (e) => setTask({ ...task, priority: e.target.value }), children: [_jsx("option", { value: "Low", children: "Low" }), _jsx("option", { value: "Medium", children: "Medium" }), _jsx("option", { value: "High", children: "High" }), _jsx("option", { value: "Critical", children: "Critical" })] })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Assigned To" }), _jsxs("select", { value: task.assignee?._id || task.assignee || "Unassigned", onChange: (e) => setTask({ ...task, assignee: e.target.value === "Unassigned" ? null : e.target.value }), children: [_jsx("option", { value: "Unassigned", children: "Unassigned" }), projectMembers.map((m) => (_jsx("option", { value: m.user?._id, children: m.user?.username }, m.user?._id)))] })] })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Deadline" }), _jsx("input", { type: "date", value: task.deadline ? task.deadline.split('T')[0] : "", onChange: (e) => setTask({ ...task, deadline: e.target.value }) })] }), _jsxs("div", { className: styles.inputGroup, children: [_jsx("label", { children: "Description" }), _jsx("textarea", { value: task.description || "", onChange: (e) => setTask({ ...task, description: e.target.value }) })] }), _jsxs("div", { className: styles.bottom, children: [_jsx("button", { className: styles.DiscardBtn, onClick: () => navigate(-1), children: "Discard" }), _jsx("button", { className: styles.saveBtn, onClick: handleSaveTask, children: "Save Changes" })] })] }), _jsxs("div", { className: styles.card, children: [_jsx("h1", { children: "Task History Log" }), _jsx("div", { className: styles.loglist, children: task.history?.slice().reverse().map((entry, idx) => (_jsxs("div", { className: styles.log, children: [_jsxs("span", { children: [_jsx("b", { children: entry.field }), ": ", entry.oldValue, " \u2794 ", _jsx("b", { children: entry.newValue })] }), _jsx("small", { children: new Date(entry.timestamp).toLocaleString() })] }, idx))) })] }), _jsxs("div", { className: styles.ccard, children: [_jsx("h1", { children: "Discussion" }), _jsx("div", { className: styles.comments, children: comments.map((c, index) => (_jsxs("div", { className: styles.commentItem, children: [_jsxs("div", { className: styles.commentHeader, children: [_jsx("strong", { children: c.author?.username || "User" }), _jsx("span", { children: new Date(c.createdAt || Date.now()).toLocaleString() }), _jsx("div", { className: styles.commentaction, children: _jsx("button", { onClick: () => handleDeleteComment(c._id), children: "X" }) })] }), _jsx("div", { className: styles.commentContent, dangerouslySetInnerHTML: { __html: displayBody(c.body, projectMembers) } })] }, c._id || index))) }), _jsxs("div", { className: styles.editorBox, children: [_jsxs("div", { className: styles.toolbar, children: [_jsx("button", { onClick: () => runCommand('bold'), children: "B" }), _jsx("button", { onClick: () => runCommand('italic'), children: "I" }), _jsx("button", { onClick: () => runCommand('underline'), children: "U" }), _jsx("button", { onClick: () => runCommand('insertUnorderedList'), title: "Bullet List", children: ". List" }), _jsx("button", { onMouseDown: (e) => { e.preventDefault(); runCommand('formatBlock', '<pre>'); }, title: "CODE Block", children: "Enter Code" }), _jsx("button", { onMouseDown: (e) => { e.preventDefault(); runCommand('insertHTML', '</pre><div><br></div>'); }, title: " Exit CODE Block", children: "Exit Code" }), _jsx("button", { onMouseDown: (e) => {
+                                                e.preventDefault();
+                                                const selection = window.getSelection()?.toString();
+                                                if (selection) {
+                                                    runCommand('createLink', selection);
+                                                }
+                                            }, title: "ADD Link", children: "Link" }), _jsx("input", { type: "color", onChange: (e) => runCommand('foreColor', e.target.value) }), _jsxs("select", { className: styles.font, onChange: (e) => runCommand('fontName', e.target.value), defaultValue: "Segoe UI", children: [_jsx("option", { value: "Segoe UI", children: "Segoe UI" }), _jsx("option", { value: "Arial", children: "Arial" }), _jsx("option", { value: "Courier New", children: "Monospace" }), _jsx("option", { value: "Georgia", children: "Serif" }), _jsx("option", { value: "Verdana", children: "Verdana" }), _jsx("option", { value: "Tahoma", children: "Tahoma" }), _jsx("option", { value: "Trebuchet MS", children: "Trebuchet" }), _jsx("option", { value: "Garamond", children: "Garamond" })] }), _jsxs("div", { style: { position: 'relative' }, children: [_jsx("button", { className: showMentions ? styles.activeBtn : "", onClick: () => setShowMentions(!showMentions), children: "Mention" }), showMentions && (_jsx("ul", { className: styles.mentionDropdown, children: projectMembers.map(m => (_jsx("li", { onClick: () => insertMention(m), children: m.user?.username || m.name }, m.user?._id))) }))] })] }), _jsx("div", { ref: editorRef, className: styles.editableArea, contentEditable: true }), _jsx("button", { className: styles.postBtn, onClick: handleAddComment, children: "Post Comment" })] })] })] }) }));
 }
 export default TaskDash;

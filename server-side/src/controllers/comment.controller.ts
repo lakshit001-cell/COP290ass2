@@ -6,7 +6,7 @@ import { Noti } from '../models/notification';
 export const postComment = async (req: any, res: Response) => {
     try{
         const {taskId} = req.params;
-        const {body, mention} = req.body;
+        const {body, mention, projectId} = req.body;
 
         const addComment = await Comment.create({
             task: taskId,
