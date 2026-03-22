@@ -1,40 +1,49 @@
 import { Link, useNavigate } from 'react-router-dom';
 import styles from '../styles/Toolbar.module.css';
 import { useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
+interface NotificationItem {
+    _id: string;
+    content: string;
+    timestamp:string;
+    type: string;
+}
 
 function Toolbar(){
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const isGlobalAdmin = user.GlobalRole === 'Admin';
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-
-    const dummyNotifications = [
-        { content: "Mentioned you", timestamp: "10:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" },
-        { content: "New Task", timestamp: "11:00 PM" }
-    ];
-   
-    const hasUnread = dummyNotifications.length > 0;
-    const navigate = useNavigate();
-    const isPublicPage = ["/", "/login", "/register"].includes(location.pathname);
-
-    // 2. Check if a user is logged in
     const hasUserSession = localStorage.getItem("user") !== null;
-
-    // 3. Only show internal icons if we are NOT on a public page AND have a session
+    const isPublicPage = ["/", "/login", "/register"].includes(location.pathname);
     const showInternal = !isPublicPage && hasUserSession;
+
+    useEffect(()=>{
+        const token = localStorage.getItem("accessToken");
+        if(!showInternal ||  !token) return;
+
+        const fetchNoti = async () => {
+        const response = await fetch(`http://localhost:5000/api/notifications/`, { 
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }});
+        const data = await response.json();
+        if(response.ok) setNotifications(data);
+    } 
+    fetchNoti();
+    const interval = setInterval(fetchNoti, 60000*3);
+    return () => clearInterval(interval);
+    }, [showInternal]);
+     
+    
+
+
+   
+    const hasUnread = notifications.length > 0;
+    const navigate = useNavigate();
 
     return (
         <nav className={styles.toolbardesign}>
@@ -58,7 +67,7 @@ function Toolbar(){
                         <div className={styles.notificationWrapper}>
                         <div className={styles.notification} onClick={() => navigate('/Notifications')} title="view Notifications">
 
-                            {hasUnread && <span className={styles.dot}>{dummyNotifications.length} </span>}
+                            {hasUnread && <span className={styles.dot}>{notifications.length} </span>}
 
                         </div>
                         </div>

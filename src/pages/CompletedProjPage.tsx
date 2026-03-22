@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 interface ProjectData {
-    id: string;
+    _id: string;
     name: string;
     description: string;
     deadline: string;
@@ -15,6 +15,7 @@ interface ProjectData {
 }
 
 function CompletedProject(){
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const navigate = useNavigate(); //
     useEffect(() => {
@@ -56,7 +57,7 @@ function CompletedProject(){
             <h1 className={styles.title}> Completed Projects</h1>
             <div className={styles.grid}>
             {projects.map((proj) => (
-                <div key={proj.id} className={styles.card}>
+                <div key={proj._id} className={styles.card}>
 
                     <div className={styles.priorityCorner}>
                     <span 
@@ -79,7 +80,11 @@ function CompletedProject(){
                     
                     </div>
                     <div className={styles.center}>
-                    <button className={styles.EnterBtn} onClick={() => navigate(`/project/${proj.id}`)} >
+                    <button className={styles.EnterBtn} onClick={() => {
+                            if(currentUser.GlobalRole === 'Admin'){
+                                navigate(`/project/${proj._id}`);
+                            }
+                        }} >
                                   Enter
                     </button>
                     </div>

@@ -8,7 +8,7 @@ import defaultIcon from '../profile_icon.jpg';
 interface NotificationItem {
     _id: string;
     content: string;
-    timestamp:string;
+    createdAt:string;
     type: string;
 }
 
@@ -76,7 +76,7 @@ function Notification() {
                         <div key={n._id} className={styles.card}>
                             <div className={styles.container}>
                                 <p className={styles.message}>{n.content}</p>
-                                <span>{new Date(n.timestamp).toLocaleString()}</span>
+                                <span>{new Date(n.createdAt).toLocaleString()}</span>
                             </div>
                             <button 
                                 className={styles.close} 

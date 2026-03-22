@@ -55,6 +55,7 @@ function ProfilePage(){
                 const response = await fetch("http://localhost:5000/api/auth/profile-save", {
                     method: "POST",
                     headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({

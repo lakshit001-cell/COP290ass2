@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import { Project } from '../models/project';
 import {User} from '../models/user';
+import { Noti } from '../models/notification';
 
 export const newProject = async (req: any, res: Response) => { // called after token Authentication.    
     try{
@@ -180,6 +181,11 @@ export const addMember  = async (req: any, res: Response) => {
             changedby: req.user.id,
         });
 
+        await Noti.create({
+            recipient: adduser._id,
+            content: `Added to Project: ${project.name} by ${req.user.name}.`,
+            type: 'assignment'
+        });
         await project.save();
         res.status(201).json({message: "Added"})
 

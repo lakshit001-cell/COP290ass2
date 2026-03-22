@@ -33,16 +33,23 @@ function App() {
           credentials: 'include'
         });
 
-        const data = await response.json();
-        if(response.ok){
-          setAccessToken(data.accessToken)
+        
+        if(!response.ok){
+          localStorage.removeItem("user");
+          localStorage.removeItem("accessToken");
+          return;
+          
         }
+        const data = await response.json();
+        setAccessToken(data.accessToken)
+        
+        
       }catch(error){
         console.error({message: "Token refresh Fail."})
       }
     };
     refresh();
-  })
+  }, []);
 
 
   return (

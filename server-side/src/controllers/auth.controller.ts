@@ -18,7 +18,7 @@ export const refresh = (req: Request, res: Response) => {
   jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!, (err: any, decoded: any) => {
     if (err) return res.status(403).json({ message: "Refresh TOken is Invalid" });
 
-    const accessToken = jwt.sign({ id: decoded.id, GlobalRole: decoded.GlobalRole }, process.env.JWT_ACCESS_SECRET!, { expiresIn: '15m' });
+    const accessToken = jwt.sign({ id: decoded.id, name: decoded.name, GlobalRole: decoded.GlobalRole }, process.env.JWT_ACCESS_SECRET!, { expiresIn: '15m' });
     res.json({ accessToken });
   });
 };
@@ -85,7 +85,7 @@ export const login = async (req: Request, res: Response) => {
         res.cookie('refreshToken', refresh, {
           httpOnly: true,
           secure: (process.env.NODE_ENV == 'production'),
-          sameSite: 'strict',
+          sameSite: 'lax',
           maxAge: 5*24*60*60*1000,
         });
 

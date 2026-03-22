@@ -45,16 +45,9 @@ const displayBody = (body: string, members: any[]) => {
     return body.replace(/\[\[user:(.*?)\]\]/g, (match, userId) => {
         // Trim the userId just in case there is stray whitespace or quotes
         const cleanId = userId.trim().replace(/"/g, '');
-
-        const member = members?.find(m => {
-            // Check both the member object and the nested user object
-            const mId = m._id || m.id;
-            const uId = m.user?._id || m.user?.id;
-            return mId === cleanId || uId === cleanId;
-        });
+        const member = members?.find(m => m._id === cleanId || m.user?._id === cleanId);
 
         if (!member) {
-            console.warn("Could not find member with ID:", cleanId);
             return `<span style="color: #ff4d4d;">@Unknown User</span>`;
         }
 
@@ -66,8 +59,7 @@ const displayBody = (body: string, members: any[]) => {
 function TaskDash() {
     const { id, boardId, taskId } = useParams();
     const navigate = useNavigate();
-    const [commentInput, setCommentInput] = useState("");
-
+    
     
     const [task, setTask] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
@@ -84,15 +76,6 @@ function TaskDash() {
         document.execCommand('insertHTML', false, mentionHtml);
         setShowMentions(false);
     };
-
-    // Helper to find all unique @mentions in a string of HTML
-    const getMentions = (html: string) => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const tags = Array.from(doc.querySelectorAll('.mention-tag'));
-        return Array.from(new Set(tags.map(t => t.textContent)));
-    };
-    
-
 
     useEffect(() => {
         if (!taskId || taskId === "undefined") {
@@ -121,8 +104,7 @@ function TaskDash() {
                 const isBoardOk = resBoard.ok || resBoard.status === 304;
                 const isTaskOk = resTask.ok || resTask.status === 304;
                 if(isBoardOk && isProjOk && isTaskOk){
-                    setProjectMembers(projData.members);
-                    
+                    setProjectMembers(projData.members.filter((m:any)=> m.role !== 'Viewer'));
                     const board = boardData.board;
                     setStories(boardData.stories || []);
                     setTask(taskData);
@@ -140,6 +122,7 @@ function TaskDash() {
         }, [id, boardId, taskId]);
 
     const runCommand = (command: string, value: string = "") => {
+        editorRef.current?.focus();
         document.execCommand(command, false, value);
     };
 
@@ -241,6 +224,8 @@ function TaskDash() {
         );
     }
 
+    
+
     return (
         <div className={styles.backgnd}>
 
@@ -295,7 +280,7 @@ function TaskDash() {
 
                     <div className={styles.inputGroup}>
                         <label>Assigned To</label>
-                        <select value={task.assignee?._id || task.assignee || "Unassigned"} onChange={(e) =>{ 
+                        <select value={task.assignee?._id || "Unassigned"} onChange={(e) =>{ 
                             const val = e.target.value;
                             setTask({
                                 ...task,
@@ -399,6 +384,36 @@ function TaskDash() {
                             </button>
 
                             <button onClick={() => runCommand('underline')}>U</button>
+                            <button onClick={()=>runCommand('insertUnorderedList')} title="Bullet List">
+                                 . List
+                            
+
+                            </button>
+
+
+                            <button
+                            onMouseDown={(e)=>{e.preventDefault(); runCommand('formatBlock', '<pre>'); }} title="CODE Block">
+                                Enter Code
+                                
+                            </button>
+
+
+                            <button
+                            onMouseDown={(e)=>{e.preventDefault(); runCommand('insertHTML', '</pre><div><br></div>'); }} title=" Exit CODE Block">
+                                Exit Code
+                                
+                            </button>
+
+                            <button onMouseDown={(e) => {e.preventDefault(); 
+                                const selection= window.getSelection() ?.toString();
+                                if (selection) {
+                                    runCommand('createLink',selection)
+                                }
+                            }} title="ADD Link">
+                                Link
+
+
+                            </button>
                             <input type="color" onChange={(e) => runCommand('foreColor', e.target.value)} />
                             
                             <select className={styles.font} onChange={(e) => runCommand('fontName', e.target.value)}
@@ -409,6 +424,10 @@ function TaskDash() {
                                 <option value="Arial">Arial</option>
                                 <option value="Courier New">Monospace</option>
                                 <option value="Georgia">Serif</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Tahoma">Tahoma</option>
+                                <option value="Trebuchet MS">Trebuchet</option>
+                                <option value="Garamond">Garamond</option>
 
                             </select>
                            

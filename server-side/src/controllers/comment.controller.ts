@@ -14,8 +14,16 @@ export const postComment = async (req: any, res: Response) => {
             body: body,
             mention: mention
         })
-
-
+        const task = await Task.findById(taskId);
+        if(task?.assignee){
+            await Noti.create({
+                        recipient: task?.assignee?._id,
+                        sender: req.user.id,
+                        content: `comment added to your assigned task ${task?.name}.`,
+                        type: 'mention',
+                        link: `/project/${req.body.projectId}/task/${taskId}`
+            })
+        }
         const populated =  await Comment.findById(addComment._id).populate('author', 'username').lean() //lean returns just the data.
 
 
@@ -26,7 +34,7 @@ export const postComment = async (req: any, res: Response) => {
                 return Noti.create({
                     recipient: userId,
                     sender: req.user.id,
-                    content: `${req.user.username || 'Someone'} mentioned you in a comment.`,
+                    content: `${req.user.name} mentioned you in a comment.`,
                     type: 'mention',
                     link: `/project/${req.body.projectId}/task/${taskId}`
                 })  

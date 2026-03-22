@@ -38,6 +38,8 @@ function KanbanDash () {
     const { id, boardId } = useParams();
     const [columns, setColumns] = useState<Column[]>([]);
     const [stories, setStories] = useState<any[]>([]);
+    const [role, setRole] = useState<any>();
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const [filterStoryId, setFilterStoryId] = useState<string>("all");
 
     const priorityColor: Record<string, string>={
@@ -62,6 +64,11 @@ useEffect(() => {
 
                 const resTask = await fetch(`http://localhost:5000/api/task/board/${boardId}`, {headers: header} );
                 const dataTask = await resTask.json();
+
+                const resProj = await fetch(`http://localhost:5000/api/project/${id}`, { headers: header })
+                const dataProj = await resProj.json();
+                const member = dataProj.members.find((m: any) => m.user._id === currentUser.id);
+                if (member) setRole(member.role);
 
                 if(resTask.ok){
                     const newColumns = dataBoard.board.columns.map((col: any) => ({
@@ -159,8 +166,9 @@ const moveTask = async (taskId: string, targetColId: string) => {
                 
                 
                 style={{ borderLeft: `8px solid ${color}` }} 
-                onClick={() => navigate(`/project/${id}/board/${boardId}/task/${actualTaskId}`)}
-                draggable="true"
+                
+                onClick={() =>{ if(!isViewer) navigate(`/project/${id}/board/${boardId}/task/${actualTaskId}`)}}
+                draggable= {isViewer ? "false" : "true"}
                 onDragStart={(e)=>{
                     const idToTransfer = task._id || task.id;
                     e.dataTransfer.setData("taskId", String(idToTransfer));
@@ -211,7 +219,8 @@ const moveTask = async (taskId: string, targetColId: string) => {
     }
 
 
-
+    const isViewer = (role === 'Viewer');
+    const isMember = (role === 'Member');
     return (
        
         
@@ -246,16 +255,18 @@ const moveTask = async (taskId: string, targetColId: string) => {
 
 
 
-                <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-story`)}>
+                {!isViewer && 
+                (<button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-story`)}>
                     + New Story
-                </button>
-                <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-task`)}>
+                </button>)}
+                
+                {!isViewer && (<button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/new-task`)}>
                     + New Task
-                </button>
+                </button>)} 
 
-                <button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/Manage`)}>
+                {!isViewer && !isMember && (<button className={styles.TaskBtn} onClick={() => navigate(`/project/${id}/board/${boardId}/Manage`)}>
                     Manage Columns
-                </button>
+                </button>)}
 
                  
 
@@ -269,9 +280,11 @@ const moveTask = async (taskId: string, targetColId: string) => {
                         className={styles.Card} 
                         onDragOver={(e) => e.preventDefault()} 
                         onDrop={(e) => {
-                            const taskId = e.dataTransfer.getData("taskId");
-                            console.log("Droppd Task:", taskId, "intoCOl: ", col._id)
-                            moveTask(taskId, col._id!)
+                            if(!isViewer){
+                                const taskId = e.dataTransfer.getData("taskId");
+                                console.log("Droppd Task:", taskId, "intoCOl: ", col._id)
+                                moveTask(taskId, col._id!)
+                            }
                             }}>
                             <h1>{col.name}</h1>
 

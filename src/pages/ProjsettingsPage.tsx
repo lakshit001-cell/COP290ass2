@@ -6,6 +6,17 @@ import { useParams } from 'react-router-dom';
 import { preconnect } from 'react-dom';
 import Popup from '../components/PopupPage';
 
+interface Member{
+    user: {
+        _id : string
+        name : string;
+        email : string;
+        role: string;
+        pfp ? : string;
+    };
+    role: string;
+}
+
 function Settings (){
     const { id } = useParams();
     const navigate = useNavigate();
@@ -18,6 +29,8 @@ function Settings (){
     const [deadline, setDeadline] = useState("");
     const [priority, setPriority] = useState("");
     const [addInput, setAddInput] = useState("");
+    const [members, setMembers] = useState<Member[]>([]);
+    const [role,setrole]=useState("Admin")
     const [removeInput, setRemoveInput] = useState("");
 
     const openpopoup= (title :string, message :string) => {
@@ -36,25 +49,30 @@ function Settings (){
 const handleUpdate = async () => {
 
         const token = localStorage.getItem('accessToken');
-        const isAddActive = addInput.trim() !== "";
+        const isAddActive = addInput.trim()  !== "";
         const isRemoveActive = removeInput.trim() !== "";
         
+        const isMember = members.some((m:any)=> m.user.email.toLowerCase() === addInput.trim().toLowerCase())
 
-        if (!isAddActive && !isRemoveActive) {
+        if(isAddActive && isMember){
+            openpopoup("Duplicate member", "User is already a part of this Project");
+            return;
+        }
+        if (!isAddActive  && !isRemoveActive) {
             openpopoup("Missing Information", "please fill atleast one field")
             return;
         }
 
         let alertMessage = "";
 
-        if (isAddActive) {
+        if (isAddActive && !isMember) {
             const response = await fetch(`http://localhost:5000/api/project/${id}/members/add`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({email: addInput, role: 'Member'}) // actual user is searched in the backend using email(unique)
+                body: JSON.stringify({email: addInput, role: role}) // actual user is searched in the backend using email(unique)
             });
 
             if(response.ok) openpopoup("Update succesful","user added");
@@ -93,6 +111,17 @@ const handleUpdate = async () => {
                 }
             });
             const data = await response.json();
+
+            const resMem = await fetch(`http://localhost:5000/api/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            const dataMem = await resMem.json();
+            setMembers(dataMem.members || []);
+
             if(response.ok){
                 setName(data.name);
                 setDescription(data.description);
@@ -250,6 +279,20 @@ const handleUpdate = async () => {
                               className={styles.inputField}
                               onChange={(e) => setAddInput(e.target.value)}  
                               />
+                              <label className={styles.size}>
+                                Select Role
+
+                                <select
+                                value={role}
+                                className={styles.inputField}
+                                onChange={(e) => setrole(e.target.value)}>
+                                <option value={"Admin"}> Admin </option>
+                                <option value={"Member"}> Member </option>
+                                <option value={"Viewer"}> Viewer </option>
+
+                                </select>
+
+                              </label>
 
 
                                <label className={styles.size}>Remove a Member</label>
@@ -294,5 +337,6 @@ const handleUpdate = async () => {
         </div>
     )
 }
+
 
 export default Settings;

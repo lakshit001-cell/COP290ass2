@@ -9,7 +9,7 @@ interface Member {
 }
 
 interface Story {
-    id: string;
+    _id: string;
     name: string;
 }
 
@@ -36,7 +36,7 @@ function NewTask() {
 
     // Data from LocalStorage
     const [projectMembers, setProjectMembers] = useState([]);
-    const [stories, setStories] = useState<Story[]>([]);
+    const [stories, setStories] = useState<any[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -163,7 +163,7 @@ function NewTask() {
                     >
                         <option value="">Independent</option>
                         {stories.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
+                            <option key={s._id} value={s._id}>{s.name}</option>
                         ))}
                     </select>
                 </div>

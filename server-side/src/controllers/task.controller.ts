@@ -49,7 +49,7 @@ export const createTask = async (req: any, res: Response) => {
             changedBy: req.user._id || req.user.id
         })
 
-        if (assignee.trim() !== "") {
+        if (assignee && assignee !== "") {
             await Noti.create({
                 recipient: assignee,
                 content: `New task '${task.name}' assigned to you by ${req.user.username}.`,
@@ -123,7 +123,7 @@ export const editTask = async (req: any, res: Response) => {
 
         const changes = req.body;
 
-        const task = await Task.findById(taskId).populate('assignee');
+        const task = await Task.findById(taskId).populate('assignee').populate('parentStory', 'name');
         if(!task) return res.status(404).json({message: "Task not found"});
 
         const updates: ITaskUpdates[] = [];
@@ -146,10 +146,10 @@ export const editTask = async (req: any, res: Response) => {
         trackChanges('Priority', 'priority', changes.priority);
         trackChanges('Description', 'description', changes.description);
         trackChanges('Type', 'type', changes.type);
-        trackChanges('Story', 'parentStory', changes.parentStory);
 
         const oldAssign = task.assignee ? (task.assignee as  any)._id.toString() : null;
-        const newAssign = (changes.assignee && changes.assignee !== "Unassigned") ? changes.assignee : null;
+        const newAssign = (changes.assignee && changes.assignee !== "Unassigned") ? changes.assignee.toString() : null;
+
 
         if(oldAssign !== newAssign){
             updates.push({
@@ -178,8 +178,13 @@ export const editTask = async (req: any, res: Response) => {
             })
         }
 
-        const oldStory = task.parentStory ? task.parentStory.toString() : "";
-        const newStory = changes.parentStory || "";
+        const oldStory = task.parentStory ? (task.parentStory as any).name : "Independent";
+        let newStory = "Independent";
+        if (changes.parentStory && typeof changes.parentStory === 'object') {
+            newStory = changes.parentStory.name || "Independent";
+        } else if (changes.parentStory && changes.parentStory !== "Independent") {
+            newStory = "Changed Story"; 
+        }
 
         if (oldStory !== newStory) {
             updates.push({
@@ -197,10 +202,10 @@ export const editTask = async (req: any, res: Response) => {
         task.parentStory = (changes.parentStory === "" || changes.parentStory === "Independent") ? null : changes.parentStory;
         task.assignee = newAssign;
 
-        if (newAssign) {
+        if (newAssign && oldAssign !== newAssign) {
             await Noti.create({
                 recipient: newAssign,
-                content: `New task '${task.name}' assigned to you by ${req.user.username}.`,
+                content: `New task '${task.name}' assigned to you by ${req.user.name}.`,
                 type: 'assignment'
             });
         }
