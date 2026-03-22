@@ -1,3 +1,38 @@
 .textstyle {
     color: aliceblue;
 }
+
+
+.backgnd {
+     background-image: url('../backgnd1.jpg');
+    background-size: cover;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    gap:20px;
+    font-size: x-large;
+    position: relative; 
+    padding: 60px 0;
+    scrollbar-width: none;
+    overflow-y: hidden;
+}
+
+.card {
+    background-color: rgba(0, 0, 0, 0.625);
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 450px;
+    height: 500px;
+    border: 3px solid #38d85d;
+    display: flex;
+    flex-direction: column;
+    gap:18px;
+    align-items: center;
+    box-shadow: #38d85d;
+}
