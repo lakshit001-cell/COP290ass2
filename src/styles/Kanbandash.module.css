@@ -14,7 +14,7 @@ background-image: url('../backgnd1.jpg');
     background-position: center; /* Centers the image */
     background-repeat: no-repeat; /* Prevents the image from tiling */
 
-    height: 100vh;
+    height: auto;
     width: 100vw;
     display: flex;
     flex-direction: column;
@@ -23,6 +23,7 @@ background-image: url('../backgnd1.jpg');
     gap: 10px;
     color: white;
     overflow-y: hidden;
+    position: relative;
     
 
     &::-webkit-scrollbar {
@@ -35,44 +36,51 @@ background-image: url('../backgnd1.jpg');
 
 
 .column {
+    flex-grow: 1;
     display: flex;
     flex-direction: row;
     gap: 30px;
     align-items: flex-start;
     overflow-x: auto;
-    height: 100vh;
+    height: calc(100vh - 100px);
     width: 100%;
    
     justify-content: flex-start;
+    padding: 0 20px;
     overflow-y: hidden;
-    margin-left: 20px;
-    margin-right: 20px;
 }
 
 .Card {
     background-color: rgba(0, 0, 0, 0.793); 
-    padding: 40px;
+    padding: 20px;
     border-radius: 10px;
     overflow-y: auto;
     min-width: 330px;
     width: 100%;
-    height: 900px;
+    height: 90%;
+    max-height: 100% ;
     max-width:450px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-        align-items: center;
+    gap: 10px;
+    align-items: center;
     justify-content: flex-start;
     color: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    scrollbar-width: none; 
+    scrollbar-width: thin; 
+    scrollbar-color: #26b249 #222;
     -ms-overflow-style: none;
 
 }
 
 .Card::-webkit-scrollbar {
-    
-    display: none; /* Hidden by default */
+    width: 6px;
+    display: block; /* Hidden by default */
+}
+
+.Card::-webkit-scrollbar-thumb {
+    background-color: #26b249;
+    border-radius: 10px;
 }
 
 
@@ -85,6 +93,7 @@ background-image: url('../backgnd1.jpg');
 }
 
 .topHeader {
+    flex-shrink: 0;
     width: 100%;
     display: flex;
     justify-content: flex-end; /* Pushes button to the right */

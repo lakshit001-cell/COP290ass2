@@ -25,7 +25,7 @@ interface Task {
     description: string;
     deadline: string;
     priority: string;
-    assignedTo: string;
+    assignee: any;
     history: TaskEvent[];
     status :string;
     type: "Task" | "Bug";
@@ -73,7 +73,7 @@ useEffect(() => {
                 if(resTask.ok){
                     const newColumns = dataBoard.board.columns.map((col: any) => ({
                     ...col,
-                    tasks: dataTask.filter((task:any)=> task.status === col.name)
+                    tasks: dataTask.filter((task:any)=> (task.status === col.name ) && (task.type !== 'Story'))
                     
                 }));
                 setColumns(newColumns);
@@ -138,7 +138,7 @@ const moveTask = async (taskId: string, targetColId: string) => {
                 }   
                 if(String(col._id)===String(targetColId)){
                     console.log(`Adding Taks ${taskId} to ${col.name} `)
-                    const moved = initCol.tasks.find(t=>{String(t._id||t.id) === String(taskId)});
+                    const moved = initCol.tasks.find(t=>String(t._id||t.id) === String(taskId));
                     if(moved){
                         return {...col, tasks: [...col.tasks, {...moved, status: targetCol.name, _id:taskId}]};
                     }
@@ -161,6 +161,10 @@ const moveTask = async (taskId: string, targetColId: string) => {
         const color= priorityColor[task.priority];
         const actualTaskId = task.id || (task as any)._id;
         const parentStory = stories.find(s => String(s.id || s._id) === String(task.parentStory));
+
+        const assigneeId = typeof task.assignee === 'object' ? task.assignee?._id : task.assignee;
+        const displayName = task.assignee?.username || "Unassigned";
+
         return (
             <div key={actualTaskId}  className={styles.Task} 
                 
@@ -186,7 +190,7 @@ const moveTask = async (taskId: string, targetColId: string) => {
                 <p><strong>{task.name}</strong></p>
                 
                 </div>
-                <span>Assigned to: {task.assignedTo}</span>
+                <span>Assigned to: {displayName}</span>
 
 
                 {parentStory && (<div className={styles.text}>

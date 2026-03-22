@@ -43,7 +43,8 @@ export const postComment = async (req: any, res: Response) => {
             await Promise.all(setNoti.filter((p:any)=> p !== null));
         }
         const response = {
-            author: (populated?.author as any).username,
+            _id: populated?._id,
+            author: (populated?.author as any),
             content: populated?.body,
             timestamp: new Date().toLocaleString
         }
@@ -64,3 +65,27 @@ export const getCom = async (req: any, res: Response) => {
         res.status(500).json({message: "server error, getComment", error})
     }
 }
+export const deleteComment = async (req:any, res:Response) => {
+    try {
+        const { commentId } = req.params;
+        const userId = req.user?._id || req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Not authorized" });
+        } 
+
+        const comment = await Comment.findById(commentId);
+
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+        if (comment.author.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "You can only delete your own comments" });
+        }
+
+        await Comment.findByIdAndDelete(commentId);
+
+        res.status(200).json({ message: "Comment deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error, deleting comment", error });
+    }
+};

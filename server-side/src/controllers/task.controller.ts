@@ -70,7 +70,7 @@ export const getTasks = async (req: any, res: Response) => {
     try{
         const {boardId} = req.params;
 
-        const tasks = await Task.find({kanban: boardId});
+        const tasks = await Task.find({kanban: boardId}).populate('assignee', 'username');
         res.status(200).json(tasks);
     }catch(error){
         res.status(500).json({message: "server error", error});
@@ -148,7 +148,9 @@ export const editTask = async (req: any, res: Response) => {
         trackChanges('Type', 'type', changes.type);
 
         const oldAssign = task.assignee ? (task.assignee as  any)._id.toString() : null;
-        const newAssign = (changes.assignee && changes.assignee !== "Unassigned") ? changes.assignee.toString() : null;
+        const newAssign = (changes.assignee && changes.assignee !== "Unassigned") 
+        ? (typeof changes.assignee === 'object' ? changes.assignee._id : changes.assignee)
+        : null;
 
 
         if(oldAssign !== newAssign){
@@ -200,7 +202,7 @@ export const editTask = async (req: any, res: Response) => {
         if (changes.description) task.description = changes.description;
         if (changes.deadline) task.deadline = changes.deadline;
         task.parentStory = (changes.parentStory === "" || changes.parentStory === "Independent") ? null : changes.parentStory;
-        task.assignee = newAssign;
+        task.assignee = newAssign ? newAssign : oldAssign;
 
         if (newAssign && oldAssign !== newAssign) {
             await Noti.create({
@@ -242,3 +244,20 @@ export const moveTask = async (req: any, res: Response) => {
         res.status(500).json({message: "Server error"});
     }
 }
+
+export const getUserTasks = async (req: any, res: Response) => {
+    try {
+        const userId = req.user._id;
+        const tasks = await Task.find({ assignee: userId })
+            .populate('kanban', 'name') 
+            .populate('parentStory', 'name')
+            .sort({ updatedAt: -1 }); // Show recently updated tasks first
+
+        if (!tasks || tasks.length === 0) {
+            return res.status(200).json({ message: "No tasks found", tasks: [] });
+        }
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({message: "Server error while fetching user tasks", error})}
+};

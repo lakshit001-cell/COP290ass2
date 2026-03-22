@@ -70,7 +70,7 @@ function Notification() {
                     Clear all
                 </button>
                 {notifications.length === 0 ? (
-                    <p> No new Notifications</p>
+                    <h1 className={styles.heading}> No new Notifications</h1>
                 ) : (
                     notifications.map((n) => (
                         <div key={n._id} className={styles.card}>

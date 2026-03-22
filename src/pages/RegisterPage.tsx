@@ -86,6 +86,8 @@ function Register(){
             />
 
             <h3>Minimum length of password : 8 characters</h3>
+            <h3>Atleast one digit</h3>
+            <h3>Atleast one alphabet</h3>
 
             <button className={styles.submitBtn}>
             Submit
