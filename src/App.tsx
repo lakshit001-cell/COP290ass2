@@ -19,6 +19,7 @@ import NewTask from './pages/NewTaskPage';
 import ManageColumn from './pages/ManageColumnPage';
 import TaskDash from './pages/TaskDashPage';
 import NewStory from './pages/NewStoryPage';
+import Notification from './pages/NotificationPage';
 import { useEffect, useState } from 'react';
 function App() {
 
@@ -56,10 +57,10 @@ function App() {
         <Route path="/" element={<Home/>} />
         <Route path="/login" element={<Login />} />
         <Route path="/Register" element={<Register />} />
-        <Route path= "/Dashboard" element= {<Dashboard />} />
-        <Route path= "/profile" element= {<ProfilePage/>} />
-        <Route path= "/NewProj" element= {<NewProject/>} />
-        <Route path= "/Projects" element= {<Project/>} />
+        <Route path="/Dashboard" element= {<Dashboard />} />
+        <Route path="/profile" element= {<ProfilePage/>} />
+        <Route path="/NewProj" element= {<NewProject/>} />
+        <Route path="/Projects" element= {<Project/>} />
         <Route path="/project/:id" element={<ProjectDash />} />
         <Route path="/project/:id/members" element={<Members />} />
         <Route path="/project/:id/settings" element={<Settings />} />
@@ -70,6 +71,7 @@ function App() {
         <Route path="/project/:id/board/:boardId/Manage" element={<ManageColumn />} />
         <Route path="/project/:id/board/:boardId/task/:taskId" element={<TaskDash />} />
         <Route path="/project/:id/board/:boardId/new-story" element={<NewStory />} />
+        <Route path="/Notifications" element= {<Notification/>} />
         
 
       </Routes>
