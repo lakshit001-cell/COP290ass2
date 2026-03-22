@@ -18,7 +18,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     gap:20px;
     font-size: x-large;
-    position: relative; /* Essential for absolute positioning of children */
+    position: relative; 
     padding: 60px 0;
     scrollbar-width: none;
     overflow-y: hidden;
@@ -171,7 +171,7 @@
 }
 
 .TaskBtn {
-    background-color: #26b249; /* Matches your navbar green */
+    background-color: #26b249; 
     color: white;
     border: none;
     padding: 10px 20px;
@@ -260,7 +260,7 @@
     
 }
 
-/* The Color Picker box fix */
+
 .toolbar input[type="color"] {
     width: 35px;
     height: 32px;
@@ -271,10 +271,10 @@
     cursor: pointer;
 }
 
-/* The typing area - Making it visible */
+
 .editableArea {
     min-height: 120px;
-    background: #f0f0f0; /* Light grey so you can see where to type */
+    background: #f0f0f0; 
     color: #000;
     padding: 12px;
     border-radius: 4px;
@@ -284,10 +284,45 @@
     margin-bottom: 15px;
 }
 
-/* Make the Mention dropdown look better */
+.editableArea pre, .commentItem pre {
+    background-color: #000;
+    color: #26b249;
+    border-radius: 6px;
+    font-family: monospace;
+    overflow-x: auto;
+    margin-top: 5px;
+    border: 1px solid #30363d;
+    
+
+
+}
+
+
+.editableArea ul {
+    list-style-type: disc;
+    margin-left: 15px ;
+    padding-left: 3px ;
+    display: block ;
+}
+
+.editableArea li {
+    display: list-item ;
+    margin-bottom: 5px;
+}
+
+
+.commentItem ul {
+    list-style-type: disc ;
+    margin-left: 25px ;
+}
+
+.commentItem li {
+    display: list-item !important;
+}
+
 .mentionDropdown {
     position: absolute;
-    bottom: 40px; /* Pop UP so it doesn't cover the keyboard */
+    bottom: 40px; 
     left: 0;
     background: #222;
     border: 1px solid #4f5c52;
@@ -320,5 +355,5 @@
     font-size: 0.85rem;
     outline: none;
     width: 130px;
-    height: 32px; /* Matches the buttons and color picker */
+    height: 32px; 
 }
