@@ -39,6 +39,7 @@
     justify-content: center;
     color: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border: 2px solid  rgb(54, 180, 54);
 }
 
 .inputField {
