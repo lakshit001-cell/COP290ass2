@@ -39,6 +39,30 @@ interface Story {
     name: string;
 }
 
+const displayBody = (body: string, members: any[]) => {
+    if (!body) return "";
+    
+    return body.replace(/\[\[user:(.*?)\]\]/g, (match, userId) => {
+        // Trim the userId just in case there is stray whitespace or quotes
+        const cleanId = userId.trim().replace(/"/g, '');
+
+        const member = members?.find(m => {
+            // Check both the member object and the nested user object
+            const mId = m._id || m.id;
+            const uId = m.user?._id || m.user?.id;
+            return mId === cleanId || uId === cleanId;
+        });
+
+        if (!member) {
+            console.warn("Could not find member with ID:", cleanId);
+            return `<span style="color: #ff4d4d;">@Unknown User</span>`;
+        }
+
+        const name = member.user?.username || member.name;
+        return `<span class="mention-tag" style="color: #26b249; font-weight: bold;">@${name}</span>`;
+    });
+};
+
 function TaskDash() {
     const { id, boardId, taskId } = useParams();
     const navigate = useNavigate();
@@ -46,16 +70,17 @@ function TaskDash() {
 
     
     const [task, setTask] = useState<any>(null);
+    const [comments, setComments] = useState<any[]>([]);
     const [projectMembers, setProjectMembers] = useState<any[]>([]);
     const [stories, setStories] = useState<any[]>([]); 
 
     const editorRef = useRef<HTMLDivElement>(null);
     const [showMentions, setShowMentions] = useState(false);
 
-    const insertMention = (name: string) => {
+    const insertMention = (member: any) => {
         editorRef.current?.focus();
-        // Insert a span with a specific class we can identify later
-        const mentionHtml = `<span class="mention-tag" style="color: #26b249; font-weight: bold;">@${name}</span>&nbsp;`;
+        const name = member.user?.username || member.name;
+        const mentionHtml = `<span class="mention-tag" data-id="${member.user?._id}" style="color: #26b249; font-weight: bold;">@${name}</span>&nbsp;`;
         document.execCommand('insertHTML', false, mentionHtml);
         setShowMentions(false);
     };
@@ -81,14 +106,16 @@ function TaskDash() {
             'Content-Type' : 'application/json',
         }
             try{
-                const [resProj, resBoard, resTask] = await Promise.all([
+                const [resProj, resBoard, resTask, resComments] = await Promise.all([
                     fetch(`http://localhost:5000/api/project/${id}`, { headers: header }),
                     fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, { headers: header }),
-                    fetch(`http://localhost:5000/api/task/${taskId}`, {headers: header})
+                    fetch(`http://localhost:5000/api/task/${taskId}`, {headers: header}),
+                    fetch(`http://localhost:5000/api/comments/${taskId}`, { headers: header })
                 ]);
                 const projData = await resProj.json();
                 const boardData = await resBoard.json();
                 const taskData = await resTask.json();
+                const commData = await resComments.json();
 
                 const isProjOk = resProj.ok || resProj.status === 304;
                 const isBoardOk = resBoard.ok || resBoard.status === 304;
@@ -99,6 +126,7 @@ function TaskDash() {
                     const board = boardData.board;
                     setStories(boardData.stories || []);
                     setTask(taskData);
+                    setComments(commData.comment);
                 }else{
                     if(!resProj.ok) return console.error("Project not ok");
                     if(!resBoard.ok) return console.error("Board not ok");
@@ -136,37 +164,82 @@ function TaskDash() {
     };
 
 
-    const handleAddComment = () => {
+    const handleAddComment = async () => {
     
-    const content = editorRef.current?.innerHTML;
+        const content = editorRef.current?.innerHTML;
 
-    // 2. Check if it's actually empty (browser often puts a <br> in empty divs)
-    if (!content || content === "<br>" || content.trim() === "") {
-        return; 
-    }
+        // 2. Check if it's actually empty (browser often puts a <br> in empty divs)
+        if (!content || content === "<br>" || content.trim() === "") {
+            return; 
+        }
 
-    const newComment: Comment = {
-        author: "You",
-        content: content, 
-        timestamp: new Date().toLocaleString(),
+        const dbContent = content.replace(
+            /<span[^>]*data-id="([^"]*)"[^>]*>@.*?<\/span>/g, 
+            '[[user:$1]]'
+        )
+
+        const doc = new DOMParser().parseFromString(content, 'text/html');
+        const mentionIds = Array.from(doc.querySelectorAll('.mention-tag')).map(tag=> tag.getAttribute('data-id')).filter(id=>id);
+
+        const token = localStorage.getItem("accessToken");
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/comments/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    body: dbContent,
+                    mention: mentionIds, // Array of User ObjectIds
+                    projectId: id,
+                })
+            });
+
+            if (response.ok) {
+                const savedComment = await response.json();
+                
+                // Update local state to show the comment immediately
+                setComments(prev=> [...prev, savedComment]);
+
+                // Clear editor
+                if (editorRef.current) editorRef.current.innerHTML = "";
+            }
+        } catch (error) {
+            console.error("Failed to post comment", error);
+        }
+
+        const newComment: Comment = {
+            author: "You",
+            content: content, 
+            timestamp: new Date().toLocaleString(),
+        };
+
+        // 3. Update the task state
+        const updatedTask = {
+            ...task,
+            comments: [...(task.comments || []), newComment],
+            
+        };
+
+        setTask(updatedTask);
+
+        // 4. Clear the editor visually
+        if (editorRef.current) {
+            editorRef.current.innerHTML = "";
+        }
     };
 
-    // 3. Update the task state
-    const updatedTask = {
-        ...task,
-        comments: [...(task.comments || []), newComment],
-        
-    };
-
-    setTask(updatedTask);
-
-    // 4. Clear the editor visually
-    if (editorRef.current) {
-        editorRef.current.innerHTML = "";
+    if (!task) {
+        return (
+            <div className={styles.backgnd}>
+                <div className={styles.container}>
+                    <h1>Loading Task...</h1>
+                </div>
+            </div>
+        );
     }
-};
-
-    if (!task) return <div className={styles.backgnd}><h1>Task not found...</h1></div>;
 
     return (
         <div className={styles.backgnd}>
@@ -244,7 +317,7 @@ function TaskDash() {
                     <label>Deadline</label>
                     <input 
                         type="date" 
-                        value={task.deadline.split('T')[0]} 
+                        value={task.deadline.split('T')[0] || ""} 
                         onChange={(e) => setTask({...task, deadline: e.target.value})}/>
                 </div>
 
@@ -292,18 +365,18 @@ function TaskDash() {
                 <h1>Comments</h1>
 
                <div className={styles.comments}>
-                        {task.comments?.map((c: any, index: number) => {
+                        {comments.map((c: any, index: number) => {
                            
 
                             return (
-                                <div key={index} className={styles.commentItem}>
+                                <div key={c._id || index} className={styles.commentItem}>
                                     
                                     <div className={styles.commentHeader}>
-                                    <strong>{c.author}</strong>
-                                    <span>{c.timestamp}</span>
+                                    <strong>{c.author?.username || c.author}</strong>
+                                    <span>{new Date(c.createdAt || c.timestamp).toLocaleString()}</span>
                                     </div>
 
-                                    <div dangerouslySetInnerHTML={{ __html: c.content }} />
+                                    <div dangerouslySetInnerHTML={{ __html: displayBody(c.body || c.content, projectMembers) }} />
                                 </div>
                             );
                         })}
@@ -349,8 +422,8 @@ function TaskDash() {
                                 {showMentions && (
                                     <ul className={styles.mentionDropdown}>
                                         {projectMembers.map(m => (
-                                            <li key={m.email} onClick={() => insertMention(m.name)}>
-                                                {m.name}
+                                            <li key={m.user?._id} onClick={() => insertMention(m)}>
+                                                {m.user?.username || m.name}
                                             </li>
                                         ))}
                                     </ul>

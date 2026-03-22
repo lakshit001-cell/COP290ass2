@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Kanban } from '../models/kanban.js';
 import { Task } from '../models/task.js';
 import { Project } from '../models/project.js';
+import { Noti } from '../models/notification.js';
 
 interface TaskData {
     name: string;
@@ -48,6 +49,14 @@ export const createTask = async (req: any, res: Response) => {
             changedBy: req.user._id || req.user.id
         })
 
+        if (assignee.trim() !== "") {
+            await Noti.create({
+                recipient: assignee,
+                content: `New task '${task.name}' assigned to you by ${req.user.username}.`,
+                type: 'assignment'
+            });
+        }
+
         await task.save();
         res.status(201).json({message: "Task created", task});
     }catch(error:any){
@@ -62,7 +71,6 @@ export const getTasks = async (req: any, res: Response) => {
         const {boardId} = req.params;
 
         const tasks = await Task.find({kanban: boardId});
-        console.log(tasks)
         res.status(200).json(tasks);
     }catch(error){
         res.status(500).json({message: "server error", error});
@@ -188,6 +196,14 @@ export const editTask = async (req: any, res: Response) => {
         if (changes.deadline) task.deadline = changes.deadline;
         task.parentStory = (changes.parentStory === "" || changes.parentStory === "Independent") ? null : changes.parentStory;
         task.assignee = newAssign;
+
+        if (newAssign) {
+            await Noti.create({
+                recipient: newAssign,
+                content: `New task '${task.name}' assigned to you by ${req.user.username}.`,
+                type: 'assignment'
+            });
+        }
         
         if(updates.length > 0){ task.history.push(...updates as any) }
 

@@ -6,8 +6,10 @@ import { useParams } from 'react-router-dom';
 import defaultIcon from '../profile_icon.jpg';
 
 interface NotificationItem {
+    _id: string;
     content: string;
     timestamp:string;
+    type: string;
 }
 
 
@@ -16,39 +18,41 @@ function Notification() {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const dummyNotifications: NotificationItem[] = [
-        {
-            content: "Lakshit Solanki mentioned you in a comment: 'Check the scrollbar fix.'",
-            timestamp: "3/21/2026, 11:30 PM"
-        },
-        {
-            content: "New task 'Implement Verilog Logic' assigned dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddto you by Admin.",
-            timestamp: "3/21/2026, 10:15 PM"
-        },
-        {
-            content: "Project 'IIT Delhi Kanban' deadline updated to March 30th.",
-            timestamp: "3/20/2026, 09:00 AM"
-        },
-        {
-            content: "Pawan Gupta added a new story: 'Frontend Facelift'.",
-            timestamp: "3/19/2026, 02:45 PM"
-        }
-    ];
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-
-    const RemoveNotification= (index:number) => {
-
+    const token = localStorage.getItem("accessToken");
+    const header = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
     }
 
+    useEffect(() => {
+        fetchNoti();
+    },[]);
 
-    const handleclearall= ( )=> {
-
+    const fetchNoti = async () => {
+        const response = await fetch(`http://localhost:5000/api/notifications/`, { headers: header });
+        const data = await response.json();
+        if(response.ok) setNotifications(data);
     }
 
-    
-    
- 
+    const removeNotification= async (notiId:string) => {
+        const response = await fetch(`http://localhost:5000/api/notifications/${notiId}`, { 
+            method: 'DELETE', 
+            headers: header, 
+        });
+        if(response.ok) setNotifications(prev => prev.filter(n=> n._id !== notiId));
+    };
 
+
+    const handleClearAll= async ()=> {
+        const response = await fetch(`http://localhost:5000/api/notifications/clear`, { 
+            method: 'DELETE', 
+            headers: header,
+        });
+        console.log("claerall")
+        if(response.ok) setNotifications([]);
+    };
 
     return (
         <div className={styles.layout}>
@@ -61,34 +65,28 @@ function Notification() {
 
                 
             <div className={styles.grid}>
-                <button className={styles.clear} onClick={()=> {handleclearall}}>
+                
+                <button className={styles.clear} onClick={handleClearAll}>
                     Clear all
                 </button>
-                        {dummyNotifications.map((m,index) => (
-                            <div key={index} className={styles.card}>
-                        
-                                <div className={styles.container}>
-                                <p className={styles.message}>{ m.content}</p>
-                                
-            
-            
-                                <span> {m.timestamp} </span>
-                                </div>
-
-                               <button
-                               className={styles.close}
-                               onClick={()=> RemoveNotification(index)}>
-                                X
-                                
-                               </button>
-
-
-                           
+                {notifications.length === 0 ? (
+                    <p> No new Notifications</p>
+                ) : (
+                    notifications.map((n) => (
+                        <div key={n._id} className={styles.card}>
+                            <div className={styles.container}>
+                                <p className={styles.message}>{n.content}</p>
+                                <span>{new Date(n.timestamp).toLocaleString()}</span>
                             </div>
-            
-            
-                        ) 
-                    )}
+                            <button 
+                                className={styles.close} 
+                                onClick={() => removeNotification(n._id)}
+                            >
+                                X
+                            </button>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
         

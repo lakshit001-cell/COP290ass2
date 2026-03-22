@@ -27,14 +27,14 @@ function ProjectDash (){
    useEffect(() => {
     const fetchProject = async () =>{
         const token = localStorage.getItem("accessToken");
-
+        const header= {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
          try{
             const response = await fetch(`http://localhost:5000/api/project/${id}`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: header
             });
             const data = await response.json();
             if(!response.ok) {
@@ -49,13 +49,25 @@ function ProjectDash (){
 
             const resBoards =  await fetch(`http://localhost:5000/api/board/project/${id}`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: header
             });
             const dataBoards = await resBoards.json();
-            if(resBoards.ok) setBoards(dataBoards);
+            
+
+            const tasksnBoards = await Promise.all(
+                dataBoards.map(async (board: any) => {
+                    const resTasks = await fetch(`http://localhost:5000/api/task/board/${board._id}`, {headers: header});
+                    const dataTasks = await resTasks.json(); 
+
+                    return {
+                        ...board,
+                        allTasks: Array.isArray(dataTasks) ? dataTasks : []
+                    }
+                })
+            )
+            console.log(boards, dataBoards)
+            setBoards(tasksnBoards);
+            
 
          }catch(error){
             console.error("project fetch Fail", error);
@@ -76,23 +88,19 @@ function ProjectDash (){
                 <h1>{projectName}</h1>
 
                 <div className={styles.grid}>
-                    {boards.map((board) => {
-                        // Progress Calculation
-                        const todoCol = board.columns?.find((c:any)=> c.name === "To Do");
-                        const doneCol = board.columns?.find((c:any)=> c.name === "Done");
+                    {boards.map((board) =>  {
 
-                        const todoCount = todoCol?.tasks?.length || 0;
-                        const progressCount = board.columns?.Inprogress?.length || 0;
-                        const doneCount = doneCol?.tasks?.length || 0;
+                        const tasks = board.allTasks || [];
                         
-                        const totalTasks = board.columns?.reduce((acc: number, col: any) => acc + (col.tasks?.length || 0), 0);
+                        const totalTasks = tasks.length;
+                        const doneCount = tasks.filter((t:any)=> t.status?.trim().toLowerCase() === "done").length;
                         const percentage = totalTasks === 0 ? 0 : Math.round((doneCount / totalTasks) * 100);
 
                         // Priority styling logic
                         const priorityClass = styles[`${board.priority?.toLowerCase()}Card`] || '';
 
                         return (
-                            <div key={board.id || board._id} className={`${styles.card} ${priorityClass}`}>
+                            <div key={board._id} className={`${styles.card} ${priorityClass}`}>
                                 {board.priority && (
                                     <div className={styles[`${board.priority.toLowerCase()}Badge`]}>
                                         {board.priority}

@@ -5,6 +5,8 @@ import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/project.routes.js'
 import boardRoutes from './routes/board.routes.js'
 import taskRoutes from './routes/task.routes.js'
+import commRoutes from './routes/comment.routes.js'
+import notiRoutes from './routes/noti.routes.js'
 
 const app: Application = express();
 
@@ -21,5 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/project', projectRoutes)
 app.use('/api/board', boardRoutes)
 app.use('/api/task', taskRoutes)
+app.use('/api/comments', commRoutes);
+app.use('/api/notifications', notiRoutes);
 
-export default app;
+export default app
