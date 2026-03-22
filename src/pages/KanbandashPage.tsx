@@ -6,7 +6,8 @@ import { useParams } from 'react-router-dom';
 import TaskDash from './TaskDashPage';
 
 interface Column {
-    id: string;
+    _id: string;
+    id?: string;
     name: string;
     wipLimit: number;
     tasks: Task[];
@@ -28,7 +29,7 @@ interface Task {
     history: TaskEvent[];
     status :string;
     type: "Task" | "Bug";
-    parentId?: string;
+    parentStory?: string;
 }
 
 function KanbanDash () {
@@ -46,55 +47,7 @@ function KanbanDash () {
         Critical : "#800000"
 
     }
-
-const moveTask = async (taskId: string, targetColId: string) => {
-
-
-    const targetCol = columns.find((c: any) => c.id.toString() === targetColId);
-    const initCol = columns.find((c:any) => c.tasks.some((t:any)=> t.id.toString() === taskId));
-
-    if(!targetCol || !initCol) return;
-    
-    // 2. Find Source and Target columns
-    const sourceColIndex = columns.findIndex((col: any) => 
-        col.tasks.some((t: any) => String(t.id) === String(taskId))
-    );
-    const targetColIndex = columns.findIndex((col: any) => col.id === targetColId);
-
-    // 3. THE NEW FORWARD-ONLY CHECK
-    // If target index is less than or equal to source, block it
-    if (targetColIndex <= sourceColIndex) {
-        alert("Workflow Error: You can only move tasks forward.");
-        return;
-    }
-
-    // 4. WIP LIMIT CHECK
-    if (targetCol.wipLimit > 0 && targetCol.tasks.length >= targetCol.wipLimit) {
-        alert(`WIP Limit Reached for ${targetCol.name}!`);
-        return;
-    }
-
-    try{
-        const token = localStorage.getItem("accessToken")
-        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/move`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                newcol: targetCol.name,
-                oldCol: initCol.name, 
-            })
-        })
-
-        if(response.ok) window.location.reload();
-    }catch(error){
-        console.error("Patch error", error);
-    }
-};
-
-    useEffect(() => {
+useEffect(() => {
         const getBoardData = async () => {
             const token = localStorage.getItem("accessToken");
             if(!token) console.error("No token found");
@@ -127,12 +80,80 @@ const moveTask = async (taskId: string, targetColId: string) => {
             }
         };
         getBoardData();
-    }, [id, boardId]);
+}, [id, boardId]);
+const moveTask = async (taskId: string, targetColId: string) => {
+
+
+    const targetCol = columns.find((c: any) => String(c._id) === String(targetColId));
+    const initCol = columns.find((c:any) => c.tasks.some((t:any)=> String(t._id || t.id || t.taskId) === String(taskId)));
+
+    if(!targetCol || !initCol) {
+        console.error("Column not found", {targetCol, initCol});
+        return;
+    }
+    
+    
+    const sourceColIndex = columns.findIndex((col: any) => String(col._id ) === String(initCol._id));
+    const targetColIndex = columns.findIndex((col: any) => String(col._id ) === String(targetColId));
+
+    console.log(`Moving from ${sourceColIndex} to ${targetColIndex}`)
+    
+    // If target index is less than or equal to source, block it
+    if (targetColIndex <= sourceColIndex) {
+        alert("Workflow Error: You can only move tasks forward.");
+        return;
+    }
+
+    // 4. WIP LIMIT CHECK
+    if (targetCol.wipLimit > 0 && targetCol.tasks.length >= targetCol.wipLimit) {
+        alert(`WIP Limit Reached for ${targetCol.name}!`);
+        return;
+    }
+
+    try{
+        const token = localStorage.getItem("accessToken")
+        const response = await fetch(`http://localhost:5000/api/task/${taskId}/move`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                newcol: targetCol.name,
+                oldCol: initCol.name, 
+            })
+        })
+
+        if(response.ok){
+            const updated = columns.map(col => {
+                if(String(col._id) === String(initCol._id)) {
+                    return {...col, tasks: col.tasks.filter(t=> String(t._id||t.id)!==String(taskId))};
+                }   
+                if(String(col._id)===String(targetColId)){
+                    console.log(`Adding Taks ${taskId} to ${col.name} `)
+                    const moved = initCol.tasks.find(t=>{String(t._id||t.id) === String(taskId)});
+                    if(moved){
+                        return {...col, tasks: [...col.tasks, {...moved, status: targetCol.name, _id:taskId}]};
+                    }
+                }
+                return col;
+            });
+            setColumns(updated);
+            console.log("State updated");
+        }else{
+            console.error("Move rejected", await response.text());
+        }
+    }catch(error){
+        console.error("Patch error", error);
+    }
+};
+
+    
 
     const render= (task:Task) => {
         const color= priorityColor[task.priority];
         const actualTaskId = task.id || (task as any)._id;
-        const parentStory = stories.find(s => String(s.id || s._id) === String(task.parentId));
+        const parentStory = stories.find(s => String(s.id || s._id) === String(task.parentStory));
         return (
             <div key={actualTaskId}  className={styles.Task} 
                 
@@ -141,9 +162,8 @@ const moveTask = async (taskId: string, targetColId: string) => {
                 onClick={() => navigate(`/project/${id}/board/${boardId}/task/${actualTaskId}`)}
                 draggable="true"
                 onDragStart={(e)=>{
-
-                    e.dataTransfer.setData("taskId", actualTaskId);
-
+                    const idToTransfer = task._id || task.id;
+                    e.dataTransfer.setData("taskId", String(idToTransfer));
                 }}
                 
                 >
@@ -245,18 +265,20 @@ const moveTask = async (taskId: string, targetColId: string) => {
 
             <div className={styles.column} >
                 {columns.map((col)=>
-                <div  key={col.id || col.name} 
+                <div  key={col._id|| col.id || col.name} 
                         className={styles.Card} 
                         onDragOver={(e) => e.preventDefault()} 
-                        onDrop={(e) => moveTask(e.dataTransfer.getData("taskId"), col.id)}>
-
-
+                        onDrop={(e) => {
+                            const taskId = e.dataTransfer.getData("taskId");
+                            console.log("Droppd Task:", taskId, "intoCOl: ", col._id)
+                            moveTask(taskId, col._id!)
+                            }}>
                             <h1>{col.name}</h1>
 
                             {col.wipLimit > 0 && (
                             <span className={styles.wipLabel}>WIP: {col.tasks.length}/{col.wipLimit}</span>
                         )}
-                            {col.tasks.filter(t => filterStoryId === "all" || String(t.parentId) === String(filterStoryId)).map(render)}
+                            {col.tasks.filter(t => filterStoryId === "all" || String(t.parentStory) === String(filterStoryId)).map(render)}
 
 
                     </div>

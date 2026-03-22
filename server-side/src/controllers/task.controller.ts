@@ -73,10 +73,8 @@ export const taskDetails = async (req:any, res: Response) => {
     try{
         const {taskId} = req.params;
 
-        const task = await Task.findById(taskId);
-        console.log(task);
+        const task = await Task.findById(taskId).populate('assignee', 'username');
         if(!task) return res.status(404).json({message: "Task not found"});
-        console.log("TaskFound");
         res.status(200).json(task);
     }catch(error){
         res.status(500).json({message: "server error", error});
@@ -103,6 +101,13 @@ export const getMemetc = async (req: any, res: Response) => {
     }
 }
 
+interface ITaskUpdates {
+    field: string;
+    oldValue: any;
+    newValue: any;
+    changedBy: string; 
+    timestamp?: Date;
+}
 
 export const editTask = async (req: any, res: Response) => {
     try{
@@ -110,72 +115,85 @@ export const editTask = async (req: any, res: Response) => {
 
         const changes = req.body;
 
-        const task = await Task.findById(taskId);
+        const task = await Task.findById(taskId).populate('assignee');
         if(!task) return res.status(404).json({message: "Task not found"});
 
-        const updates= [];
-        if(changes.name && changes.name!== task.name){
-            updates.push({
-            field:  name, // "status", "assignee", etc.'
-            oldValue: task.name,
-            newValue: changes.name,
-            changedBy: req.user.id
-        })};
-        if(changes.priority && changes.priority!== task.priority){
-            updates.push({
-            field: 'priority', // "status", "assignee", etc.
-            oldValue: task.priority,
-            newValue: changes.priority,
-            changedBy: req.user.id
-        })};
-        if(changes.description && changes.description!== task.description){
-            updates.push({
-            field: 'description', // "status", "assignee", etc.
-            oldValue: task.description,
-            newValue: changes.description,
-            changedBy: req.user.id
-        })};
-        if(changes.deadline && changes.deadline!== task.deadline){
-            updates.push({
-            field: 'deadline', // "status", "assignee", etc.
-            oldValue: task.deadline,
-            newValue: changes.deadline,
-            changedBy: req.user.id
-        })};
-        if(changes.type && changes.type!== task.type){
-            updates.push({
-            field: 'Type', // "status", "assignee", etc.
-            oldValue: task.type,
-            newValue: changes.type,
-            changedBy: req.user.id
-        })};
-        if(changes.description && changes.description!== task.description){
-            updates.push({
-            field: 'description', // "status", "assignee", etc.
-            oldValue: task.description,
-            newValue: changes.description,
-            changedBy: req.user.id
-        })};
-        if(changes.parentStory && changes.parentStory!== task.parentStory){
-            updates.push({
-            field: 'Story', // "status", "assignee", etc.
-            oldValue: task.parentStory,
-            newValue: changes.parentStory,
-            changedBy: req.user.id
-        })};
-        if(changes.assignee && changes.assignee.toString()!== task.assignee?.toString()){
-            updates.push({
-            field: 'Assigned Member', // "status", "assignee", etc.
-            oldValue: task.assignee,
-            newValue: changes.assignee,
-            changedBy: req.user.id
-        })};
+        const updates: ITaskUpdates[] = [];
+        type TaskFields = 'name' | 'priority' | 'description' | 'deadline' | 'type' | 'parentStory' | 'assignee' | 'status';
+        const trackChanges = (fieldthis: string, dbVal: TaskFields, newVal: any) =>{
+            const currVal = (task as any)[dbVal];
+            if(newVal !== undefined && String(newVal) !== String(currVal)){
+                updates.push({
+                    field: fieldthis,
+                    oldValue: currVal,
+                    newValue: newVal,
+                    changedBy: req.user.id
+                });
+                return true;
+            }
+            return false;
+        }
 
-        Object.assign(task, changes);
-        if(updates.length > 0){ task.history.push(...updates) }
+        trackChanges('Name', 'name', changes.name);
+        trackChanges('Priority', 'priority', changes.priority);
+        trackChanges('Description', 'description', changes.description);
+        trackChanges('Type', 'type', changes.type);
+        trackChanges('Story', 'parentStory', changes.parentStory);
+
+        const oldAssign = task.assignee ? (task.assignee as  any)._id.toString() : null;
+        const newAssign = (changes.assignee && changes.assignee !== "Unassigned") ? changes.assignee : null;
+
+        if(oldAssign !== newAssign){
+            updates.push({
+                field: 'Assignee',
+                oldValue: (task.assignee as any)?.username || "Unassigned",
+                newValue: newAssign? "Changed" : "Unassigned",
+                changedBy: req.user.id
+            })
+        }
+
+        const getISOString = (date: any) => {
+            if (!date) return "";
+            if (typeof date === 'string' && date.length === 10) return date;
+            return new Date(date).toISOString().split('T')[0];
+            
+        };
+        const oldDeadline = getISOString(task.deadline);
+        const newDeadline = getISOString(changes.deadline);
+
+        if(oldDeadline !== newDeadline){
+            updates.push({
+                field: 'Deadline',
+                oldValue: oldDeadline,
+                newValue: newDeadline,
+                changedBy: req.user.id
+            })
+        }
+
+        const oldStory = task.parentStory ? task.parentStory.toString() : "";
+        const newStory = changes.parentStory || "";
+
+        if (oldStory !== newStory) {
+            updates.push({
+                field: 'Story',
+                oldValue: oldStory || "Independent",
+                newValue: newStory || "Independent",
+                changedBy: req.user.id
+            });
+        }
+
+        if (changes.name) task.name = changes.name;
+        if (changes.priority) task.priority = changes.priority;
+        if (changes.description) task.description = changes.description;
+        if (changes.deadline) task.deadline = changes.deadline;
+        task.parentStory = (changes.parentStory === "" || changes.parentStory === "Independent") ? null : changes.parentStory;
+        task.assignee = newAssign;
+        
+        if(updates.length > 0){ task.history.push(...updates as any) }
 
         await task.save();
-        res.status(200).json(task);
+        const updated = await Task.findById(taskId).populate('assignee')
+        res.status(200).json(updated);
     }catch(error){
         res.status(500).json({message: "server error", error});
     }
@@ -185,7 +203,7 @@ export const moveTask = async (req: any, res: Response) => {
     try{
         const {taskId} = req.params;
 
-        const {newcol , initCol} = req.body;
+        const {newcol , oldCol} = req.body;
 
         const task = await Task.findById(taskId);
         if(!task) return res.status(404).json({message: "Task not found"});
@@ -193,11 +211,12 @@ export const moveTask = async (req: any, res: Response) => {
         task.status = newcol;
         task.history.push({
             field: "Task Status",
-            oldValue: initCol,
+            oldValue: oldCol,
             newValue: newcol
         })
 
         await task.save();
+        res.status(200).json({message: "moved", task});
     }catch(error){
         res.status(500).json({message: "Server error"});
     }

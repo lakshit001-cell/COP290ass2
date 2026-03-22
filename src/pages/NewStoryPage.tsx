@@ -28,71 +28,76 @@ function NewStory() {
 
     const [isLoaded, setIsLoaded] = useState(false);
     
-    
-
-
-    
-    
-
-    
+    const [firstColumn, setFirstColumn] = useState("");
 
    useEffect(() => {
-        // Just checking if project exists
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const project = allProjects.find((p: any) => String(p.id) === String(id));
-        if (project) {
-            setIsLoaded(true);
-        }
+        const fetchContext = async () => {
+            const token = localStorage.getItem("accessToken");
+            try {
+                // Using your getMemetc function endpoint
+                const res = await fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (res.ok && data.board?.columns?.length > 0) {
+                    setFirstColumn(data.board.columns[0].name);
+                }
+            } catch (error) {
+                console.error("Failed to load board context", error);
+            }
+        };
+        fetchContext();
     }, [id]);
 
 
 
-const handleCreate = () => {
+const handleCreate = async () => {
         if (!storyName.trim()) {
             alert("Please enter a story name");
             return;
         }
 
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        
-        // 1. Find the project and board indices
-        const pIdx = allProjects.findIndex((p: any) => String(p.id) === String(id));
-        if (pIdx === -1) return;
-
-        const bIdx = allProjects[pIdx].boards.findIndex((b: any) => String(b.boardId) === String(boardId));
-        if (bIdx === -1) return;
-
-        // 2. Create the Story object
-        const newStory = {
-            id: `story-${Date.now()}`,
+        const token = localStorage.getItem("accessToken");
+        const storyData = {
             name: storyName,
             description: description,
-            deadline: deadline,
+            type: 'Story', 
             priority: priority,
-            createdAt: new Date().toLocaleString()
+            column: firstColumn || "To Do", 
+            kanban: boardId,
+            deadline: deadline || null,
         };
 
-        // 3. STORAGE LOGIC: Push to the board's story array
-        // We ensure the array exists first so it doesn't crash
-        if (!allProjects[pIdx].boards[bIdx].stories) {
-            allProjects[pIdx].boards[bIdx].stories = [];
+        try {
+            const response = await fetch(`http://localhost:5000/api/task/create/${boardId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(storyData)
+            });
+
+            if (response.ok) {
+                alert(`Story "${storyName}" created successfully!`);
+                navigate(`/project/${id}/board/${boardId}`);
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.message}`);
+            }
+        } catch (error) {
+            console.error("Save error", error);
+            alert("Server connection failed");
         }
 
-        allProjects[pIdx].boards[bIdx].stories.push(newStory);
+        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
 
-        // 4. SAVE AND NAVIGATE
-        localStorage.setItem("projects", JSON.stringify(allProjects));
-        alert(`Story "${storyName}" created successfully!`);
-        navigate(`/project/${id}/board/${boardId}`);
     };
 
     const handleDiscard = () => {
         navigate(-1);
     }
-
-
-
-   
 
     return (
         <div className={styles.backgnd}>
@@ -107,17 +112,13 @@ const handleCreate = () => {
                     <input 
                         type='text' 
                         className={styles.inputField} 
-                       
+                        value={storyName}
                         onChange={(e) => setStoryName(e.target.value)} 
                     />
                 </div>
 
                 
-                
-
-               
-                
-
+            
                 <div className={styles.inputgroup}>
                     <label className={styles.size}>Deadline</label>
                     <input 
@@ -133,7 +134,7 @@ const handleCreate = () => {
                     <label className={styles.size}>Priority</label>
                     <select 
                         className={styles.inputField} 
-                   
+                        value={priority}
                         onChange={(e) => setpriority(e.target.value)}
                     >
                         <option value="Low">Low</option>
@@ -147,6 +148,7 @@ const handleCreate = () => {
                     <label className={styles.size}>Description</label>
                     <textarea
                         className={styles.inputFieldd}
+                        value={description}
                         onChange={(e) => setdescription(e.target.value)} />
 
 

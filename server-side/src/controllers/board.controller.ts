@@ -50,3 +50,21 @@ export const projBoards = async (req: any, res: Response) => {
         res.status(500).json({message: "server error", error});
     }
 }
+
+export const updateBoards = async (req: any, res: Response) => {
+    try {
+        const { boardId } = req.params;
+        const { columns } = req.body;
+        const updated= await Kanban.findByIdAndUpdate(
+            boardId,
+            { columns: columns },
+            { new: true } // Return the updated document
+        );
+
+        if (!updated) return res.status(404).json({ message: "Board not found" });
+
+        res.status(200).json({ message: "Columns updated", updated });
+    } catch (error: any) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+}

@@ -57,8 +57,8 @@ export const projectDetails = async (req: any, res: Response) => {
             return res.status(404).json({message: "project not found"});
         }
 
-        const isMember = project.members.some((m:any) => m.user.toString() === req.user.id)
-
+        const isMember = project.members.some((m:any) => m.user._id.toString() === req.user.id)
+        console.log(isMember);
         if(!isMember && req.user.GlobalRole !== 'Admin') return res.status(403).json({message: "Not a member"});
        
 

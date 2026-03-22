@@ -22,7 +22,7 @@ interface Task {
     deadline: string;
     priority: string;
     assignedTo: string;
-    parentId?: string;
+    parentStory?: string;
     history: TaskEvent[];
     status: string;
     type: 'Task' | 'Bug';
@@ -69,12 +69,6 @@ function TaskDash() {
     
 
 
-
-
-
-
-
-
     useEffect(() => {
         if (!taskId || taskId === "undefined") {
             console.warn("TaskId is not available yet.");
@@ -101,6 +95,7 @@ function TaskDash() {
                 const isTaskOk = resTask.ok || resTask.status === 304;
                 if(isBoardOk && isProjOk && isTaskOk){
                     setProjectMembers(projData.members);
+                    
                     const board = boardData.board;
                     setStories(boardData.stories || []);
                     setTask(taskData);
@@ -121,32 +116,23 @@ function TaskDash() {
     };
 
 
-    
-
-
-
-
-
-
-    const handleSave = () => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const pIdx = allProjects.findIndex((p: any) => String(p.id) === String(id));
-        const bIdx = allProjects[pIdx].boards.findIndex((b: any) => String(b.boardId) === String(boardId));
-
-        allProjects[pIdx].boards[bIdx].columns.forEach((col: any) => {
-            const tIdx = col.tasks.findIndex((t: any) => String(t.id) === String(taskId));
-            if (tIdx !== -1) {
-                col.tasks[tIdx] = task;
-                col.tasks[tIdx].history.push({
-                    event: `Task details updated. Story set to: ${stories.find(s => s.id === task.parentId)?.name || "Independent"}`,
-                    timestamp: new Date().toLocaleString()
-                });
+    const handleSave = async () => {
+        const token = localStorage.getItem("accessToken");
+            const header = {
+            'Authorization' : `Bearer ${token}`,
+            'Content-Type' : 'application/json',
+        }
+            try{
+                const response = await fetch(`http://localhost:5000/api/task/update/${taskId}`,{
+                    method: 'PATCH',
+                    headers: header,
+                    body: JSON.stringify(task),
+                })
+                if(response.ok) alert("Task updated");
+                navigate(-1);
+            }catch(error){
+                console.error("fetch data fail", error);
             }
-        });
-
-        localStorage.setItem("projects", JSON.stringify(allProjects));
-        alert("Task updated successfully!");
-        navigate(-1);
     };
 
 
@@ -212,12 +198,12 @@ function TaskDash() {
                 <div className={styles.inputGroup}>
                     <label>Story </label>
                     <select 
-                        value={task.parentId || ""} 
-                        onChange={(e) => setTask({...task, parentId: e.target.value})}
+                        value={task.parentStory?._id || task.parentStory|| ""} 
+                        onChange={(e) => setTask({...task, parentStory: e.target.value})}
                     >
                         <option value="">Independent</option>
                         {stories.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
+                            <option key={s._id} value={s._id}>{s.name}</option>
                         ))}
                     </select>
                 </div>
@@ -236,10 +222,16 @@ function TaskDash() {
 
                     <div className={styles.inputGroup}>
                         <label>Assigned To</label>
-                        <select value={task.assignedTo} onChange={(e) => setTask({...task, assignedTo: e.target.value})}>
+                        <select value={task.assignee?._id || task.assignee || "Unassigned"} onChange={(e) =>{ 
+                            const val = e.target.value;
+                            setTask({
+                                ...task,
+                                assignee: val === "Unassigned" ? null : val
+                            });
+                            }}>
                             <option value="Unassigned">Unassigned</option>
                             {projectMembers.map((m: any) => (
-                                <option key={m.email} value={m.name}>{m.name}</option>
+                                <option key={m.user?.id || m.user?._id} value={m.user?._id}>{m.user?.username}</option>
                             ))}
                         </select>
 
@@ -252,7 +244,7 @@ function TaskDash() {
                     <label>Deadline</label>
                     <input 
                         type="date" 
-                        value={task.deadline} 
+                        value={task.deadline.split('T')[0]} 
                         onChange={(e) => setTask({...task, deadline: e.target.value})}/>
                 </div>
 
@@ -275,10 +267,10 @@ function TaskDash() {
             <div className={styles.card}>
                 <h1>LOG</h1>
                 <div className={styles.loglist}>
-                    {task.history.slice().reverse().map((entry:TaskEvent, index: number)=>
+                    {task.history?.slice().reverse().map((entry:any, index: number)=>
                     <div key={index} className={styles.log}>
-                    <span>{entry.event}</span>
-                     <span>{entry.timestamp}</span>
+                    <span>{entry.field} changed from <b>{String(entry.oldValue)}</b> to <b>{String(entry.newValue)}</b></span>
+                     <span>{new Date(entry.timestamp).toLocaleString()}</span>
 
                     </div>
                     

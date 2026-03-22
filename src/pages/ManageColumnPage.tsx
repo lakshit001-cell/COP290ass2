@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../styles/ManageColumn.module.css';
 
 interface Column {
-    id: string;
+    _id?: string;
+    id?: string;
     name: string;
     wipLimit: number;
-    tasks: any[];
+    ordered?: number
 }
 
 function ManageColumns() {
@@ -16,13 +17,34 @@ function ManageColumns() {
 
     // Load initial data
     useEffect(() => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const project = allProjects.find((p: any) => String(p.id) === String(id));
-        const board = project?.boards.find((b: any) => String(b.boardId) === String(boardId));
-        
-        if (board && Array.isArray(board.columns)) {
-            setColumns(board.columns);
-        }
+        const fetchBoard = async () => {
+            const token = localStorage.getItem("accessToken");
+            try {
+                const res = await fetch(`http://localhost:5000/api/task/${id}/board/${boardId}`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                 }
+                });
+                const data = await res.json();
+                console.log(data);
+
+                // If board has columns, use them. Otherwise, set defaults.
+                if (data.board?.columns && data.board.columns.length > 0) {
+                    setColumns(data.board.columns);
+                } else {
+                    setColumns([
+                        { _id: '1', name: "To Do", wipLimit: 0 },
+                        { _id: '2', name: "In Progress", wipLimit: 5 },
+                        { _id: '3', name: "In Review", wipLimit: 5 },
+                        { _id: '4', name: "Done", wipLimit: 0 }
+                    ]);
+                }
+            } catch (error) {
+                console.error("Fetch failed", error);
+            }
+        };
+        fetchBoard();
     }, [id, boardId]);
 
     // Handle reordering: Swapping elements in the array
@@ -46,7 +68,6 @@ function ManageColumns() {
             id: `col-${Date.now()}`,
             name:" ",
             wipLimit: 10,
-            tasks: []
         };
         setColumns([...columns, newCol]);
     };
@@ -54,7 +75,7 @@ function ManageColumns() {
     const deleteColumn = (colId: string, colName: string) => {
        
         if (window.confirm(`Tasks inside will be lost.`)) {
-            setColumns(columns.filter(c => c.id !== colId));
+            setColumns(columns.filter(c => c._id !== colId));
         }
     };
 
@@ -63,24 +84,37 @@ function ManageColumns() {
 
     const updateColumn = (colId: string, field: string, value: any) => {
         setColumns(prev => prev.map(col => 
-            col.id === colId ? { ...col, [field]: value } : col
+            (col._id || col.id) === colId ? { ...col, [field]: value } : col
         ));
     };
 
 
 
 
-    const handleSave = () => {
-        const allProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        const projectIndex = allProjects.findIndex((p: any) => String(p.id) === String(id));
-        
-        if (projectIndex !== -1) {
-            const boardIndex = allProjects[projectIndex].boards.findIndex((b: any) => String(b.boardId) === String(boardId));
-            if (boardIndex !== -1) {
-                allProjects[projectIndex].boards[boardIndex].columns = columns;
-                localStorage.setItem("projects", JSON.stringify(allProjects));
+    const handleSave = async () => {
+        const token = localStorage.getItem("accessToken");
+        const columnsToSave = columns.map((col, index) => ({
+        ...col,
+        ordered: index 
+    }));
+        try {
+            const response = await fetch(`http://localhost:5000/api/board/${boardId}/columns`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ columns })
+            });
+
+            if (response.ok) {
+                alert("Workflow updated successfully!");
                 navigate(`/project/${id}/board/${boardId}`);
+            } else {
+                alert("Failed to save changes.");
             }
+        } catch (error) {
+            console.error("Save error", error);
         }
     };
 
@@ -97,8 +131,10 @@ function ManageColumns() {
                     <button className={styles.addBtn} onClick={addColumn}> Add Column</button>
 
 
-                    {columns.map((col, index) => (
-                        <div key={col.id} className={styles.colRow}>
+                    {columns.map((col, index) => {
+                        const colId = col._id || col.id;
+                        return (
+                        <div key={colId} className={styles.colRow}>
                             
                             <div className={styles.reorderGroup}>
                                 <button className={styles.orderBtn} 
@@ -125,7 +161,7 @@ function ManageColumns() {
                                     type="text"
                                     value={col.name}
                                     
-                                    onChange={(e) => updateColumn(col.id, "name", e.target.value)}
+                                    onChange={(e) => updateColumn(colId!, "name", e.target.value)}
                                 />
                             </div>
 
@@ -135,17 +171,17 @@ function ManageColumns() {
                                     type="number"
                                     min="0"
                                     value={col.wipLimit}
-                                    onChange={(e) => updateColumn(col.id, "wipLimit", parseInt(e.target.value))}
+                                    onChange={(e) => updateColumn(colId!, "wipLimit", parseInt(e.target.value))}
                                 />
                             </div>
 
                             { (
-                                <button className={styles.deleteBtn} onClick={() => deleteColumn(col.id, col.name)}>
+                                <button className={styles.deleteBtn} onClick={() => deleteColumn(colId!, col.name)}>
                                     X
                                 </button>
                             )}
                         </div>
-                    ))}
+                        )})}
                 </div>
 
                 <div className={styles.buttonActions}>
