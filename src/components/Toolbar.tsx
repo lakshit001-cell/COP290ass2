@@ -6,7 +6,27 @@ function Toolbar(){
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const isGlobalAdmin = user.GlobalRole === 'Admin';
+
+
+    const dummyNotifications = [
+        { content: "Mentioned you", timestamp: "10:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" },
+        { content: "New Task", timestamp: "11:00 PM" }
+    ];
    
+    const hasUnread = dummyNotifications.length > 0;
     const navigate = useNavigate();
     const isPublicPage = ["/", "/login", "/register"].includes(location.pathname);
 
@@ -35,9 +55,12 @@ function Toolbar(){
                         <div className={styles.profilecircle} onClick={() => navigate('/profile')} title="view profile">
 
                         </div>
-
+                        <div className={styles.notificationWrapper}>
                         <div className={styles.notification} onClick={() => navigate('/Notifications')} title="view Notifications">
 
+                            {hasUnread && <span className={styles.dot}>{dummyNotifications.length} </span>}
+
+                        </div>
                         </div>
 
 
